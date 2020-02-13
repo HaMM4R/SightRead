@@ -12,10 +12,11 @@ INSTALLATION:
 
 First install Kivy: (from https://kivy.org/doc/stable/installation/installation-linux.html)
 
+```
 $ python3 -m pip install --upgrade --user pip setuptools virtualenv
 $ python3 -m virtualenv ~/kivy_venv
 $ source ~/kivy_venv/bin/activate
 $ python3 -m pip install kivy
 $ python3 -m pip install kivy_examples
 $ python3 -m pip install ffpyplayer
-
+```
