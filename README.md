@@ -20,3 +20,8 @@ $ python3 -m pip install kivy
 $ python3 -m pip install kivy_examples
 $ python3 -m pip install ffpyplayer
 ```
+
+Then to run, clone and do
+```
+$ python3 main
+```
