@@ -1,0 +1,89 @@
+ScreenManager:
+	MainMenu:
+	SongSelect:
+	GameScreen:
+
+<TimingIcon>
+    size: 20,20
+    canvas:
+        Ellipse:
+            pos:self.pos
+            size:self.size
+
+<MainMenu>:
+	name: "main"
+	BoxLayout:
+		height:30
+		spacing:10
+
+		Label: 
+			size_hint: (.7, 1)
+			text: "Sight Reading Game"	
+		GridLayout:
+			cols: 1
+			size_hint: (.3,1)
+			Button:
+				text: "Choose Song"
+				on_release: 
+					app.root.current = "song"
+					root.manager.transition.direction = "left"
+			Button:
+				text: "Test Button"
+				on_release: app.root.current = "song"
+			
+
+<SongSelect>
+	name: "song"
+	
+	BoxLayout:
+		height:30
+		spacing:10
+
+		Label: 
+			size_hint: (.7, 1)
+			text: "Choose Song"
+		GridLayout:
+			cols: 1
+			size_hint: (.3,1)		
+			Button:
+				text: "Send it up"
+				on_release: app.root.current = "game"
+			Button:
+				text: "Back"
+				on_release: 
+					app.root.current = "main"
+					root.manager.transition.direction = "right"
+	
+
+<GameScreen>
+	name: "game"
+	#BoxLayout:
+#		Button:
+#			size_hint: (.5, 1)
+#			text: "Miss Note"
+#			on_release: root.call_hit(False)
+#		Button:
+#			size_hint: (.5, 1)
+#			text: "Hit Note"
+#			on_release: root.call_hit(True)
+
+
+<Player>:
+    size: 1, 80
+    pos: 20, self.center_y - 40
+    canvas:
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+<MusicGame>:
+    player1: player_left
+    
+    Player:
+        id: player_left
+        x: self.parent.center_x
+        center_y: root.center_y
+    
+        
+        
+
