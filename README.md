@@ -21,7 +21,15 @@ $ python3 -m pip install kivy_examples
 $ python3 -m pip install ffpyplayer
 ```
 
-Then to run, clone and do
+Then to run on Ubuntu, clone and do
 ```
-$ python3 main
+$ python3 main.py
 ```
+
+To run on Android etc, first install the "Kivy Laucnher" from your "app store" or direct from it's package for your phone type.
+
+e.g. for Android, via Google's Play Store:  https://play.google.com/store/apps/details?id=org.kivy.pygame&hl=en_US
+
+The Kivy launcher allows you to load different Kivy-based apps as data files rather than having to install them individually.
+
+(When this app is more stable we may package it as a standalone Android and other platform app to run without the Laucher.)
