@@ -36,7 +36,6 @@ class GameScreen(Screen):
 #    def call_hit(self, hasHit):
 #        self.game.hit_note(hasHit)
 
-
 class ScreenManager(ScreenManager):
     pass
 
@@ -357,6 +356,7 @@ class MusicGame(Widget):
             self.end_game()
     
     def load_song(self):
+        print("loading song")
         self.sound = SoundLoader.load('song.mp3')
         self.sound.play()
 
