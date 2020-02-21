@@ -65,7 +65,7 @@ class NoteType(Enum):
     #thirtyNote = 0.075
     
 class MissType(Enum):
-    missDecrease = 10
+    missDecrease = 4
     missClick = 6
     sucessfulHit = -8
 
@@ -279,13 +279,24 @@ class MusicGame(Widget):
     
     notesHitInBar = []
 
-    #Performance meter boundarys 
+    #Performance meter boundaries
     performanceStartX = 0
     performanceSizeX = 0
     performanceStartY = 0
     performanceSizeY = 0
     performanceMaxMoveX = 0
     peformanceCurPos = 0
+
+    #bar display boundaries 
+    barOneStartX = 0
+    barOneSizeX = 0
+    barOneStartY = 0
+    barOneSizeY = 0
+    barTwoStartX = 0
+    barTwoSizeX = 0
+    barTwoStartY = 0
+    barTwoSizeY = 0
+    barTwoPosOffset = 0
 
     passedSong = False
 
@@ -307,6 +318,22 @@ class MusicGame(Widget):
         self.performanceStartY = 50
         self.performanceSizeY = 2
         self.performanceMaxMoveX = self.performanceStartX + self.performanceSizeX
+
+        heightOffset = Window.height / 4
+        barWidth = heightOffset * 5
+
+        self.barOneStartY = Window.height - heightOffset
+        self.barOneSizeY = heightOffset
+        self.barTwoStartY = heightOffset * 2
+        self.barTwoSizeY = heightOffset
+
+        self.barOneStartX = (Window.width / 2) - (barWidth / 2)
+        self.barTwoStartX = (Window.width / 2) - (barWidth / 2)
+        self.barOneSizeX = barWidth
+        self.barTwoSizeX = barWidth
+
+        self.barTwoPosOffset = 30
+
         
 
     def end_game(self):
@@ -357,7 +384,8 @@ class MusicGame(Widget):
                 self.passedSong = False
                 self.end_game()   
 
-            self.timingHelp.center_x = float(self.timingHelp.center_x) + (float(self.width) / float(self.barGenerator.time) / 60)
+            self.timingHelp.center_x = float(self.timingHelp.center_x) + (float(self.barOneSizeX) / float(self.barGenerator.time) / 60)
+            
             self.performanceMeter.center_x = self.performanceStartX + ((float(self.player1.curSuccess) / 100) * self.performanceSizeX)
             self.draw_labels()
             self.animate_timing_icon(dt)
@@ -409,12 +437,12 @@ class MusicGame(Widget):
         self.draw_notes()
         self.assign_labels()
         with self.canvas:
-            Rectangle(pos=(0, (Window.height / 2) - 41), size=(Window.width, 2))
-            Rectangle(pos=(0, (Window.height / 2) - 21), size=(Window.width, 2))
-            Rectangle(pos=(0, (Window.height / 2) - 1), size=(Window.width, 2))
-            Rectangle(pos=(0, (Window.height / 2) + 19), size=(Window.width, 2))
-            Rectangle(pos=(0, (Window.height / 2) + 39), size=(Window.width, 2))
-            
+            distBetween = self.barOneSizeY / 5
+
+            for i in range(1,6):  
+                Rectangle(pos=(self.barOneStartX, self.barOneStartY - (i * distBetween)), size=(self.barOneSizeX, 2))
+                Rectangle(pos=(self.barTwoStartX, (self.barTwoStartY - (i * distBetween) - self.barTwoPosOffset)), size=(self.barTwoSizeX, 2))
+   
             Rectangle(pos=(self.performanceStartX, self.performanceStartY), size = (self.performanceSizeX, self.performanceSizeY))
             
             title = Label(text='Sight Reading Prototype', font_size=50)
@@ -431,14 +459,17 @@ class MusicGame(Widget):
     #Split into draw class            
 
     def draw_notes(self):
+        distBetween = self.barOneSizeY / 5
         for i in range(len(self.barGenerator.barPositions)):
             #This offset for loaded in bars
-            offset = (self.barGenerator.barPositions[i] / self.barGenerator.time) * 100
+            
+            #self.performanceMeter.center_x = self.performanceStartX + ((float(self.player1.curSuccess) / 100) * self.performanceSizeX)
+            offset = (self.barGenerator.barPositions[i] / self.barGenerator.time)
             #offset = (self.barGenerator.barPositions[i] * 100)
-            draw = (Window.width / 100) * offset
+            draw = ((self.barOneSizeX) * offset) + self.barOneStartX
             with self.canvas:
-                Rectangle(pos=(draw, (Window.height / 2) - 40), size=(2, 80))
-                Ellipse(pos=(draw - 16, (Window.height / 2) - 40), size=(16, 16))
+                Rectangle(pos=(draw, self.barOneStartY- self.barOneSizeY), size=(2, self.barOneSizeY - distBetween))
+                Ellipse(pos=(draw - 16, self.barOneStartY - self.barOneSizeY), size=(16, 16))
                 
     def assign_labels(self):
             with self.canvas:
@@ -461,8 +492,8 @@ class MusicGame(Widget):
                 self.conCurNotes.center_x = Window.width / 2
                 self.conCurNotes.center_y = Window.height / 4 + 60
                 
-                self.timingHelp.center_x = 0
-                self.timingHelp.center_y = Window.height / 2 + 90 
+                self.timingHelp.center_x = self.barOneStartX
+                self.timingHelp.center_y = self.barOneStartY
        
                 self.performanceMeter.pos = (20,20)   
 
