@@ -129,7 +129,8 @@ class Bars:
         self.beatsPassed = 0
         del self.barPositions[:]
         for i in range(len(self.beatPositions)):
-            if self.beatPositions[i] <= (self.lastBarTime + self.time) and self.beatPositions[i] >= self.lastBarTime:
+            if self.beatPositions[i] <= (self.lastBarTime + self.time) and self.beatPositions[i] > self.lastBarTime:
+                print(self.beatPositions[i])
                 self.barPositions.append((self.beatPositions[i] - self.lastBarTime))
     
     def calculate_song_length(self):
