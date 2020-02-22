@@ -72,7 +72,8 @@ class MissType(Enum):
 class Bars:  
         
     beatPositions = []  #Holds beat times for entire song
-    barPositions = []   #Holds beat times for a bar of a song
+    curBarPositions = []   #Holds beat times for a bar of a song
+    nextBarPositions = [] # Holds beat times for next bar of song
     
     bpm = 60
     meter = 4
@@ -119,19 +120,28 @@ class Bars:
         self.clock = self.clock + dt
         if(self.clock >= self.lastBarTime + self.time):
             self.lastBarTime += self.time
-            self.calculate_bars()
+            
+            del self.curBarPositions[:]
+            del self.nextBarPositions[:]
+
+            self.curBarPositions = self.calculate_bars(self.lastBarTime)
+            self.nextBarPositions = self.calculate_bars((self.lastBarTime + self.time))
+
+            print(self.curBarPositions)
             #self.construct_bar()
             return True
         return False
           
     #Calculates the bar for read in beat files and assigns it
-    def calculate_bars(self):
+    def calculate_bars(self, lastTime):
         self.beatsPassed = 0
-        del self.barPositions[:]
+        beatHolder = []
+        del beatHolder[:]
         for i in range(len(self.beatPositions)):
-            if self.beatPositions[i] <= (self.lastBarTime + self.time) and self.beatPositions[i] > self.lastBarTime:
-                print(self.beatPositions[i])
-                self.barPositions.append((self.beatPositions[i] - self.lastBarTime))
+            if self.beatPositions[i] <= (lastTime + self.time) and self.beatPositions[i] > lastTime:
+                #self.curBarPositions.append((self.beatPositions[i] - self.lastBarTime))
+                beatHolder.append((self.beatPositions[i] - lastTime))
+        return beatHolder
     
     def calculate_song_length(self):
         return math.ceil(self.beatPositions[-1] / self.time)
@@ -139,20 +149,20 @@ class Bars:
     #Constructs a bar randomly and assigns it         
     def construct_bar(self):
         self.beatsPassed = 0
-        del self.barPositions[:]
+        del self.curBarPositions[:]
         bar = self.create_random()
         for x in range(len(bar)):
             if (x == 0):
-                self.barPositions.append(bar[x].value)
+                self.curBarPositions.append(bar[x].value)
             else:
-                self.barPositions.append(bar[x].value + bar[x - 1].value)
+                self.curBarPositions.append(bar[x].value + bar[x - 1].value)
     
     def miss_beat(self, notesHit):
-        for i in range(self.beatsPassed, len(self.barPositions)):
+        for i in range(self.beatsPassed, len(self.curBarPositions)):
             #Used for generated random bars
-            accNum = self.lastBarTime + (self.time * self.barPositions[i])
+            accNum = self.lastBarTime + (self.time * self.curBarPositions[i])
             
-            if (self.clock > (self.barPositions[i] + self.lastBarTime) + 0.1):
+            if (self.clock > (self.curBarPositions[i] + self.lastBarTime) + 0.1):
                 self.beatsPassed += 1
                 if(i not in notesHit):
                     return True
@@ -161,7 +171,7 @@ class Bars:
         
     #Clears out attributes ready to start again
     def end_game(self):
-        del self.barPositions[:]
+        del self.curBarPositions[:]
         del self.beatPositions[:]
         self.clock = 0
         self.lastBarTime = 0
@@ -307,7 +317,10 @@ class MusicGame(Widget):
         self.draw_background()
         self.load_beats()
         self.load_song()
-        self.barGenerator.calculate_bars()
+
+        self.barGenerator.curBarPositions = self.barGenerator.calculate_bars(0)
+        self.barGenerator.nextBarPositions = self.barGenerator.calculate_bars(self.barGenerator.time)
+
         #Return how many bars the song contains
         self.gameManager.maxBars = self.barGenerator.calculate_song_length()
         self.gameManager.totalNotes = len(self.barGenerator.beatPositions)
@@ -349,7 +362,7 @@ class MusicGame(Widget):
     
     #Kivy touch event, try and cut down on parameters sent        
     def on_touch_down(self, touch):
-        succesfulHit, noteID = self.player1.check_touch(self.barGenerator.barPositions, self.barGenerator.lastBarTime, self.barGenerator.time, self.barGenerator.clock) 
+        succesfulHit, noteID = self.player1.check_touch(self.barGenerator.curBarPositions, self.barGenerator.lastBarTime, self.barGenerator.time, self.barGenerator.clock) 
         self.touch_feedback(succesfulHit)
         self.notesHitInBar.append(noteID)
         if(self.gameEnded == True):
@@ -461,16 +474,30 @@ class MusicGame(Widget):
 
     def draw_notes(self):
         distBetween = self.barOneSizeY / 5
-        for i in range(len(self.barGenerator.barPositions)):
+
+        #Current Bar
+        for i in range(len(self.barGenerator.curBarPositions)):
             #This offset for loaded in bars
             
             #self.performanceMeter.center_x = self.performanceStartX + ((float(self.player1.curSuccess) / 100) * self.performanceSizeX)
-            offset = (self.barGenerator.barPositions[i] / self.barGenerator.time)
-            #offset = (self.barGenerator.barPositions[i] * 100)
+            offset = (self.barGenerator.curBarPositions[i] / self.barGenerator.time)
+            #offset = (self.barGenerator.curBarPositions[i] * 100)
             draw = ((self.barOneSizeX) * offset) + self.barOneStartX
             with self.canvas:
                 Rectangle(pos=(draw, self.barOneStartY- self.barOneSizeY), size=(2, self.barOneSizeY - distBetween))
-                Ellipse(pos=(draw - 16, self.barOneStartY - self.barOneSizeY), size=(16, 16))
+                Ellipse(pos=(draw - distBetween, self.barOneStartY - self.barOneSizeY), size=(distBetween, distBetween))
+
+        #Next Bar
+        for i in range(len(self.barGenerator.nextBarPositions)):
+            #This offset for loaded in bars
+            
+            #self.performanceMeter.center_x = self.performanceStartX + ((float(self.player1.curSuccess) / 100) * self.performanceSizeX)
+            offset = (self.barGenerator.nextBarPositions[i] / self.barGenerator.time)
+            #offset = (self.barGenerator.curBarPositions[i] * 100)
+            draw = ((self.barTwoSizeX) * offset) + self.barTwoStartX
+            with self.canvas:
+                Rectangle(pos=(draw, self.barTwoStartY- self.barTwoSizeY - self.barTwoPosOffset), size=(2, self.barTwoSizeY - distBetween))
+                Ellipse(pos=(draw - (distBetween), self.barTwoStartY - self.barTwoSizeY - self.barTwoPosOffset), size=(distBetween, distBetween))
                 
     def assign_labels(self):
             with self.canvas:
