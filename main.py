@@ -362,12 +362,12 @@ class MusicGame(Widget):
                     Color(0.06,1,0.06,0.3)
                 else:
                     Color(1,1,1,0.1)
-                visualHit = Rectangle(pos=(self.timingHelp.center_x, (Window.height / 2)), size=(2, 0))
+                visualHit = Rectangle(pos=(self.timingHelp.center_x, (self.barOneStartY - (self.barOneSizeY / 2))), size=(2, 0))
         self.animate_touch_feedback(visualHit, self.timingHelp.center_x)    
     
     #Maybe change animation to fade? Still need to make notes pulse    
     def animate_touch_feedback(self, visual, posX):
-        anim = Animation(pos = (posX, (Window.height / 2) - 40), size = (2,80), duration = 0.1)
+        anim = Animation(pos = (posX, (self.barOneStartY - self.barOneSizeY)), size = (2,self.barOneSizeY - (self.barOneSizeY / 5)), duration = 0.1)
         anim.start(visual)
          
     #Kivy function called by clock      
