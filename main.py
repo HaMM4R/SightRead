@@ -126,8 +126,6 @@ class Bars:
 
             self.curBarPositions = self.calculate_bars(self.lastBarTime)
             self.nextBarPositions = self.calculate_bars((self.lastBarTime + self.time))
-
-            print(self.curBarPositions)
             #self.construct_bar()
             return True
         return False
@@ -351,6 +349,10 @@ class MusicGame(Widget):
         
 
     def end_game(self):
+        file = open("Timings.txt", "a")
+        if file.mode == 'a':
+            file.writelines(("\n",str(self.player1.curScore)))
+            file.close()
         self.draw_final_screen()
     
     def restart_game(self):
@@ -419,12 +421,22 @@ class MusicGame(Widget):
         self.sound.play()
 
     def load_beats(self):
-        file = open("Timings.txt", "r")
-        if file.mode == 'r':
+        resultsPresent = False
+        file = open("Timings.txt", "a+")
+        if file.mode == 'a+':
             contents = file.read().splitlines()
-            file.close()
             for i in contents:
-                self.barGenerator.beatPositions.append(float(i))
+                try:
+                    self.barGenerator.beatPositions.append(float(i))
+                except:
+                    #Break so doesn't load in previous scores as beat timings
+                    if(i == "Results"):
+                        resultsPresent = True
+                    break
+
+            if(resultsPresent == False):
+                file.write("Results") 
+            file.close()
         
      #FIND A WAY TO COMPRESS THIS INTO ONE LINE THAT SUPPORTS MULTIPLE TIME SIGS
     #PURELY FOR TESTING  
@@ -529,13 +541,13 @@ class MusicGame(Widget):
     def draw_final_screen(self):
         self.canvas.clear()
         Window.clearcolor = (0, 0.5, 0.5, 1)
+        results = False
+        previousResults = []
+
         with self.canvas:
-            
                 title = Label(text="Results", font_size = 60)
-                
                 notes = Label(text= ("Total Notes Hit: " + str(self.player1.notesHitTotal) + "/" + str(self.gameManager.totalNotes - 1)), font_size=40)
                 scoreFInal = Label(text= ("Score: " + str(self.player1.curScore)), font_size=40)
-
                 maxNotes = Label(text= ("Max Streak: " + str(self.player1.maxConcurrentNotes)), font_size=40)
             
                 if(self.passedSong):
@@ -554,6 +566,40 @@ class MusicGame(Widget):
 
                 maxNotes.center_x = Window.width / 2
                 maxNotes.center_y = Window.height / 2 - 80
+
+                #Read in and display results
+                file = open("Timings.txt", "r")
+                if file.mode == 'r':
+                    contents = file.read().splitlines()
+                    for i in contents:
+                        if(results == True):
+                            try:
+                                previousResults.append(int(i))
+                            except:
+                                print("not int")
+
+                        if(i == "Results"):
+                            results = True
+
+                    file.close()
+
+                previousResults.sort()
+                previousResults.reverse()
+
+                numOfPreviousResults = len(previousResults)
+                
+                #Print previous results
+                if(numOfPreviousResults >= 3):
+                    for i in range(0,3):
+                        note = Label(text= ("Leaderboard: " + str(i+1) + " " + str(previousResults[i])), font_size=20)
+                        note.center_x = Window.width / 2
+                        note.center_y = Window.height / 2 - 140 - (i * 20)
+                else:
+                    for i in range(previousResults):
+                        note = Label(text= ("Leaderboard: " + str(i+1) + " " + str(previousResults[i])), font_size=20)
+                        note.center_x = Window.width / 2
+                        note.center_y = Window.height / 2 - 140 - (i * 20)
+
                 
 #        restartButton = kb.Button(text="Restart")
 #        restartButton.bind(on_press=self.start_game)
