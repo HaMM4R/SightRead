@@ -595,7 +595,7 @@ class MusicGame(Widget):
                         note.center_x = Window.width / 2
                         note.center_y = Window.height / 2 - 140 - (i * 20)
                 else:
-                    for i in range(previousResults):
+                    for i in range(numOfPreviousResults):
                         note = Label(text= ("Leaderboard: " + str(i+1) + " " + str(previousResults[i])), font_size=20)
                         note.center_x = Window.width / 2
                         note.center_y = Window.height / 2 - 140 - (i * 20)
