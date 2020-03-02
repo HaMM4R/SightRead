@@ -50,24 +50,24 @@ ScreenManager:
 <SongSelect>
 	name: "song"
 	
-	BoxLayout:
-		height:30
-		spacing:10
-
-		Label: 
-			size_hint: (.7, 1)
-			text: "Choose Song"
-		GridLayout:
-			cols: 1
-			size_hint: (.3,1)		
-			Button:
-				text: "Queen - Tear it up"
-				on_release: app.root.current = "game"
-			Button:
-				text: "Back"
-				on_release: 
-					app.root.current = "main"
-					root.manager.transition.direction = "right"
+#	BoxLayout:
+#		height:30
+#		spacing:10
+#
+#		Label: 
+#			size_hint: (.7, 1)
+#			text: "Choose Song"
+#		GridLayout:
+#			cols: 1
+#			size_hint: (.3,1)		
+#			Button:
+#				text: "Queen - Tear it up"
+#				on_release: app.root.current = "game"
+#			Button:
+#				text: "Back"
+#				on_release: 
+#					app.root.current = "main"
+#					root.manager.transition.direction = "right"
 	
 
 <GameScreen>
@@ -90,6 +90,25 @@ ScreenManager:
         Rectangle:
             pos: self.pos
             size: self.size
+
+<SelectableLabel>:
+    # Draw a background to indicate selection
+    canvas.before:
+        Color:
+            rgba: (.0, 0.9, .1, .3) if self.selected else (0, 0, 0, 1)
+        Rectangle:
+            pos: self.pos
+            size: self.size
+<RV>:
+    viewclass: 'SelectableLabel'
+    SelectableRecycleBoxLayout:
+        default_size: None, dp(56)
+        default_size_hint: 1, None
+        size_hint_y: None
+        height: self.minimum_height
+        orientation: 'vertical'
+        multiselect: True
+        touch_multiselect: True
 
 <MusicGame>:
     player1: player_left

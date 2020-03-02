@@ -19,6 +19,10 @@ from kivy.app import App
 from kivy.core.window import Window
 from kivy.uix.widget import Widget
 from kivy.uix.label import Label
+from kivy.uix.gridlayout import GridLayout
+from kivy.uix.button import Button
+from kivy.uix.scrollview import ScrollView
+from kivy.uix.recycleview import RecycleView
 import kivy.uix.button as kb
 from kivy.properties import (
     NumericProperty, ReferenceListProperty, ObjectProperty
@@ -38,17 +42,37 @@ import math
 from jnius import autoclass 
 import os
 from time import sleep
+import glob
+from functools import partial
+
 class MainMenu(Screen):
     pass
 
 class SongSelect(Screen):
-    pass
+    def on_enter(self):
+        entries = os.listdir('/sdcard/Music')
+        print(entries)
+        for i in range(len(entries)):
+            btn = Button(text=str(entries[i]))
+            btn.size = (Window.width / 2, Window.height / 8)
+            btn.size_hint = (None, None)
+            btn.center_x = Window.width / 2
+            btn.center_y = (Window.height - (Window.height / 8 * i)) - Window.height / 8
+            buttoncallback = partial(self.switch_screen, btn.text)
+            btn.bind(on_press=buttoncallback)
+            self.add_widget(btn)
+    
+    def switch_screen(self, *args):
+        self.manager.current = "game"
+        self.manager.songName = args[0]
+        self.manager.transition.direction = "right"
+
 
 class GameScreen(Screen):
     #Loads the widget for the game itself
     def on_enter(self):
         self.game = MusicGame()
-        self.game.start_game()
+        self.game.start_game(self.manager.songName)
         self.add_widget(self.game)
         Clock.schedule_interval(self.game.update, 1.0 / 60.0)
         #self.game.start_song()
@@ -56,7 +80,7 @@ class GameScreen(Screen):
 #        self.game.hit_note(hasHit)
 
 class ScreenManager(ScreenManager):
-    pass
+    songName = ""
 
 #calculate these values based on the time sig later
 #trouble with python decimal addition is causing problems with smaller beats
@@ -312,7 +336,10 @@ class MusicGame(Widget):
 
     passedSong = False
 
-    def start_game(self):
+    songName = ""
+
+    def start_game(self, songTitle):
+        self.songName = songTitle
         self.gameEnded = False
         self.calculate_boundaries()
         self.draw_background()
@@ -421,12 +448,13 @@ class MusicGame(Widget):
     
     def load_song(self):
         print("loading song")
+        songSource = ('/sdcard/Music/', str(self.songName))
         #self.sound = SoundLoader.load('song.mp3')
         #self.sound.play()
         MediaPlayer = autoclass('android.media.MediaPlayer')
         AudioManager = autoclass('android.media.AudioManager')
         self.mPlayer = MediaPlayer()
-        self.mPlayer.setDataSource('/sdcard/Music/song.mp3')
+        self.mPlayer.setDataSource('/sdcard/Music/' + self.songName)
         self.mPlayer.setAudioStreamType(AudioManager.STREAM_NOTIFICATION)
         self.mPlayer.prepare()
         self.mPlayer.start()
