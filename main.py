@@ -102,11 +102,9 @@ class Bars:
     curBarPositions = []   #Holds beat times for a bar of a song
     nextBarPositions = [] # Holds beat times for next bar of song
     
-    bpm = 90
     meter = 4
             
-    bps = float(60/float(bpm))
-    time = bps * meter  #How long in seconds is a bar based on BPM and time sig
+    time = 0  #How long in seconds is a bar based on BPM and time sig
 
     clock = 0
     lastBarTime = 0     #What time in seconds did the last bar run until
@@ -116,6 +114,10 @@ class Bars:
     
     missMargin = 0.1
     
+    def calc_bar_time(self, BPM):
+        bps = float(60/float(BPM))
+        self.time = bps * self.meter 
+
     #Creates a random bar for testing
     def create_random(self):
         totalBar = 0
@@ -338,6 +340,8 @@ class MusicGame(Widget):
 
     songName = ""
 
+    bpm = 0
+
     def start_game(self, songTitle):
         self.songName = songTitle
         self.gameEnded = False
@@ -345,6 +349,8 @@ class MusicGame(Widget):
         self.draw_background()
         self.load_beats()
         self.load_song()
+
+        self.barGenerator.calc_bar_time(self.bpm)
 
         self.barGenerator.curBarPositions = self.barGenerator.calculate_bars(0)
         self.barGenerator.nextBarPositions = self.barGenerator.calculate_bars(self.barGenerator.time)
@@ -479,19 +485,20 @@ class MusicGame(Widget):
         #    if(resultsPresent == False):
         #        file.write("Results") 
         #    file.close()
-        file = open("Timings.txt")
+        cleanpath = os.path.abspath("/sdcard/Music/SidecarFiles/" + self.songName + ".txt")
+        file = open(cleanpath, 'r')
         print(os.listdir("/sdcard/"))
 
         contents = file.read().splitlines()
 
-        for i in contents:
+        for i in range (len(contents)):
             try:
-                self.barGenerator.beatPositions.append(float(i))
+                if(i != 0):
+                    self.barGenerator.beatPositions.append(float(contents[i]))
             except:
                 print("error")
 
-        print("beatPositions:")
-        print(self.barGenerator.beatPositions)
+        self.bpm = contents[0]
         
      #FIND A WAY TO COMPRESS THIS INTO ONE LINE THAT SUPPORTS MULTIPLE TIME SIGS
     #PURELY FOR TESTING  
