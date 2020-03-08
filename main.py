@@ -361,9 +361,9 @@ class MusicGame(Widget):
         self.draw_notes()
 
     def calculate_boundaries(self):
-        self.performanceStartX = 20
-        self.performanceSizeX = (Window.width / 8)
-        self.performanceStartY = 50
+        self.performanceStartX = (Window.width/4 + Window.width / 16)
+        self.performanceSizeX = (Window.width / 4 + (Window.width / 8))
+        self.performanceStartY = 80
         self.performanceSizeY = 2
         self.performanceMaxMoveX = self.performanceStartX + self.performanceSizeX
 
@@ -532,14 +532,10 @@ class MusicGame(Widget):
                 Rectangle(pos=(self.barTwoStartX, (self.barTwoStartY - (i * distBetween) - self.barTwoPosOffset)), size=(self.barTwoSizeX, 2))
    
             Rectangle(pos=(self.performanceStartX, self.performanceStartY), size = (self.performanceSizeX, self.performanceSizeY))
-            
-            title = Label(text='Sight Reading Prototype', font_size=50)
-            title.center_x = Window.width / 2
-            title.center_y = Window.height - 50
+            Rectangle(pos=(0, Window.height - 105), size=(Window.width, 1))
             
     
     def draw_labels(self):
-        self.notesHit.text = ("Notes Hit: " + str(self.player1.notesHitTotal))
         self.score.text= ("Score: " + str(self.player1.curScore))
         self.multiplier.text= ("Multiplier: " + str(self.player1.currentScoreMultipler) + "x")
         self.conCurNotes.text= ("Steak: " + str(self.player1.concurrentNotes))
@@ -575,24 +571,20 @@ class MusicGame(Widget):
                 
     def assign_labels(self):
             with self.canvas:
-                self.notesHit = Label(text= ("Notes Hit: " + str(self.player1.notesHitTotal)), font_size=30)
-                self.score = Label(text= ("Score: " + str(self.player1.curScore)), font_size=30)
-                self.multiplier = Label(text= ("Multiplier: " + str(self.player1.currentScoreMultipler)), font_size=30)
-                self.conCurNotes = Label(text= ("Steak: " + str(self.player1.concurrentNotes)), font_size=30)
+                self.score = Label(text= ("Score: " + str(self.player1.curScore)), font_size=50)
+                self.multiplier = Label(text= ("Multiplier: " + str(self.player1.currentScoreMultipler)), font_size=50)
+                self.conCurNotes = Label(text= ("Steak: " + str(self.player1.concurrentNotes)), font_size=50)
                 self.timingHelp = Label(text= ("|"), font_size=20)
                 self.performanceMeter = Label(text=("|"), font_size=20)
-            
-                self.notesHit.center_x = Window.width / 2
-                self.notesHit.center_y = Window.height / 4 - 30
                 
-                self.score.center_x = Window.width / 2
-                self.score.center_y = Window.height / 4
+                self.score.center_x = 120
+                self.score.center_y = Window.height - 55
                 
                 self.multiplier.center_x = Window.width / 2
-                self.multiplier.center_y = Window.height / 4 + 30
+                self.multiplier.center_y = Window.height - 55
                 
-                self.conCurNotes.center_x = Window.width / 2
-                self.conCurNotes.center_y = Window.height / 4 + 60
+                self.conCurNotes.center_x = Window.width - 115
+                self.conCurNotes.center_y = Window.height - 55
                 
                 self.timingHelp.center_x = self.barOneStartX
                 self.timingHelp.center_y = self.barOneStartY
