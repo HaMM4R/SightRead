@@ -72,6 +72,16 @@ ScreenManager:
 
 <GameScreen>
 	name: "game"
+    canvas.before:
+        Color:
+            rgba: 1,1,1,0.5
+        Rectangle:
+            pos: self.pos
+            size: self.size
+            source: 'Background.jpg'
+        Color:
+            rgba: 1,1,1,1
+
 	#BoxLayout:
 #		Button:
 #			size_hint: (.5, 1)

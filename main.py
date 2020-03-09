@@ -38,6 +38,7 @@ from decimal import Decimal as D
 from kivy.lang import Builder
 from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.animation import Animation
+from kivy.uix.image import Image
 import math
 from jnius import autoclass 
 import os
@@ -437,7 +438,8 @@ class MusicGame(Widget):
                 self.passedSong = False
                 self.end_game()   
 
-            self.timingHelp.center_x = float(self.timingHelp.center_x) + (float(self.barOneSizeX) / float(self.barGenerator.time) / 60)
+            self.timingHelp.center_x = float(self.timingHelp.center_x) + (float(self.barOneSizeX) / float(self.barGenerator.time) / Clock.get_rfps())
+            print(Clock.get_rfps())
             
             self.performanceMeter.center_x = self.performanceStartX + ((float(self.player1.curSuccess) / 100) * self.performanceSizeX)
             self.draw_labels()
@@ -521,7 +523,10 @@ class MusicGame(Widget):
     #Split into draw class
     def draw_background(self):
         self.canvas.clear()
-        Window.clearcolor = (0, 0.5, 0.5, 1)
+        #Window.clearcolor = (0, 0.5, 0.5, 1)
+        #backgroundImage = Image(source="Background.jpg")
+        #backgroundImage.allow_stretch = False
+        #backgroundImage.keep_ration = True
         self.draw_notes()
         self.assign_labels()
         with self.canvas:
