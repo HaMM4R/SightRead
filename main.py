@@ -53,6 +53,13 @@ class SongSelect(Screen):
     def on_enter(self):
         entries = os.listdir('/sdcard/Music')
         print(entries)
+        print("FUCKKKKKKKKKKKKKKKKKKKKKKKKKKK")
+        print("FUCKKKKKKKKKKKKKKKKKKKKKKKKKKK")
+        print("FUCKKKKKKKKKKKKKKKKKKKKKKKKKKK")
+        print("FUCKKKKKKKKKKKKKKKKKKKKKKKKKKK")
+        print("FUCKKKKKKKKKKKKKKKKKKKKKKKKKKK")
+        print("FUCKKKKKKKKKKKKKKKKKKKKKKKKKKK")
+        print("FUCKKKKKKKKKKKKKKKKKKKKKKKKKKK")
         for i in range(len(entries)):
             btn = Button(text=str(entries[i]))
             btn.size = (Window.width / 2, Window.height / 8)
@@ -72,16 +79,20 @@ class SongSelect(Screen):
 class GameScreen(Screen):
     #Loads the widget for the game itself
     def on_enter(self):
+        self.clear_widgets()
         self.game = MusicGame()
-        self.game.start_game(self.manager.songName)
+        self.game.start_game(self.manager.songName, self.manager)
         self.add_widget(self.game)
         Clock.schedule_interval(self.game.update, 1.0 / 60.0)
+
         #self.game.start_song()
 #    def call_hit(self, hasHit):
 #        self.game.hit_note(hasHit)
 
 class ScreenManager(ScreenManager):
     songName = ""
+
+        
 
 #calculate these values based on the time sig later
 #trouble with python decimal addition is causing problems with smaller beats
@@ -340,12 +351,14 @@ class MusicGame(Widget):
     passedSong = False
 
     songName = ""
+    mamager = None
 
     bpm = 0
 
-    def start_game(self, songTitle):
+    def start_game(self, songTitle, screenManager):
         self.songName = songTitle
         self.gameEnded = False
+        self.manager = screenManager
         self.calculate_boundaries()
         self.draw_background()
         self.load_beats()
@@ -398,7 +411,9 @@ class MusicGame(Widget):
         self.player1.restart_game()
         self.barGenerator.end_game()
         self.gameManager.restart_game()
-        self.start_game(self.songName)
+        #self.start_game(self.songName)
+        self.manager.current = "song"
+        self.manager.transition.direction = "right"
     
     #Kivy touch event, try and cut down on parameters sent        
     def on_touch_down(self, touch):
