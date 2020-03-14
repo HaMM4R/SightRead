@@ -398,7 +398,7 @@ class MusicGame(Widget):
         self.player1.restart_game()
         self.barGenerator.end_game()
         self.gameManager.restart_game()
-        self.start_game()
+        self.start_game(self.songName)
     
     #Kivy touch event, try and cut down on parameters sent        
     def on_touch_down(self, touch):
