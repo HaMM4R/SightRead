@@ -53,13 +53,6 @@ class SongSelect(Screen):
     def on_enter(self):
         entries = os.listdir('/sdcard/Music')
         print(entries)
-        print("FUCKKKKKKKKKKKKKKKKKKKKKKKKKKK")
-        print("FUCKKKKKKKKKKKKKKKKKKKKKKKKKKK")
-        print("FUCKKKKKKKKKKKKKKKKKKKKKKKKKKK")
-        print("FUCKKKKKKKKKKKKKKKKKKKKKKKKKKK")
-        print("FUCKKKKKKKKKKKKKKKKKKKKKKKKKKK")
-        print("FUCKKKKKKKKKKKKKKKKKKKKKKKKKKK")
-        print("FUCKKKKKKKKKKKKKKKKKKKKKKKKKKK")
         for i in range(len(entries)):
             btn = Button(text=str(entries[i]))
             btn.size = (Window.width / 2, Window.height / 8)
@@ -80,8 +73,13 @@ class GameScreen(Screen):
     #Loads the widget for the game itself
     def on_enter(self):
         self.clear_widgets()
-        self.game = MusicGame()
-        self.game.start_game(self.manager.songName, self.manager)
+        print(self.manager.mode)
+        if(self.manager.mode == "SongPlay"):
+            self.game = SongMode()
+        else:
+            self.game = RandomMode()
+
+        self.game.start_game(self.manager)
         self.add_widget(self.game)
         Clock.schedule_interval(self.game.update, 1.0 / 60.0)
 
@@ -91,7 +89,7 @@ class GameScreen(Screen):
 
 class ScreenManager(ScreenManager):
     songName = ""
-
+    mode = ""
         
 
 #calculate these values based on the time sig later
@@ -103,6 +101,7 @@ class NoteType(Enum):
     sixteethNote = 0.125
     #thirtyNote = 0.075
     
+
 class MissType(Enum):
     missDecrease = 0#4
     missClick = 0#6
@@ -111,9 +110,12 @@ class MissType(Enum):
 class Bars:  
         
     beatPositions = []  #Holds beat times for entire song
+    randomBarPositions = [] #Holds bars for random bar choices
     curBarPositions = []   #Holds beat times for a bar of a song
     nextBarPositions = [] # Holds beat times for next bar of song
-    
+
+    gameType = ""
+
     meter = 4
             
     time = 0  #How long in seconds is a bar based on BPM and time sig
@@ -165,14 +167,19 @@ class Bars:
             del self.curBarPositions[:]
             del self.nextBarPositions[:]
 
-            self.curBarPositions = self.calculate_bars(self.lastBarTime)
-            self.nextBarPositions = self.calculate_bars((self.lastBarTime + self.time))
+            if(self.gameType == "SongPlay"):
+                self.curBarPositions = self.calculate_bars_song(self.lastBarTime)
+                self.nextBarPositions = self.calculate_bars_song((self.lastBarTime + self.time))
+            else:
+                self.curBarPositions = self.calculate_bars_random(self.lastBarTime)
+                self.nextBarPositions = self.calculate_bars_random((self.lastBarTime + self.time))
+
             #self.construct_bar()
             return True
         return False
           
     #Calculates the bar for read in beat files and assigns it
-    def calculate_bars(self, lastTime):
+    def calculate_bars_song(self, lastTime):
         self.beatsPassed = 0
         beatHolder = []
         del beatHolder[:]
@@ -182,6 +189,23 @@ class Bars:
                 beatHolder.append((self.beatPositions[i] - lastTime))
         return beatHolder
     
+    def calculate_bars_random(self, lastTime):
+        self.beatsPassed = 0
+        beatHolder = []
+        del beatHolder[:]
+
+        randomBar = random.randint(0, len(self.randomBarPositions) - 1)
+        lastBeatTime = 0
+
+        for i in range(len(self.randomBarPositions[randomBar])):
+            if(i != 0):
+                beatTiming = self.time / float(self.randomBarPositions[randomBar][i - 1])
+            else:
+                beatTiming = 0
+            beatHolder.append(beatTiming + lastBeatTime)
+            lastBeatTime += beatTiming
+        return beatHolder
+
     def calculate_song_length(self):
         return math.ceil(self.beatPositions[-1] / self.time)
 
@@ -352,27 +376,23 @@ class MusicGame(Widget):
 
     songName = ""
     mamager = None
+    gameMode = ""
 
     bpm = 0
 
-    def start_game(self, songTitle, screenManager):
-        self.songName = songTitle
-        self.gameEnded = False
+    def start_game(self, screenManager):
         self.manager = screenManager
+        self.songName = self.manager.songName
+        self.gameMode = self.manager.mode
+        self.gameEnded = False
         self.calculate_boundaries()
         self.draw_background()
         self.load_beats()
         self.load_song()
 
+        self.barGenerator.gameType = self.gameMode
         self.barGenerator.calc_bar_time(self.bpm)
-
-        self.barGenerator.curBarPositions = self.barGenerator.calculate_bars(0)
-        self.barGenerator.nextBarPositions = self.barGenerator.calculate_bars(self.barGenerator.time)
-
-        #Return how many bars the song contains
-        self.gameManager.maxBars = self.barGenerator.calculate_song_length()
-        self.gameManager.totalNotes = len(self.barGenerator.beatPositions)
-        self.draw_notes()
+        self.bar_setup_type()
 
     def calculate_boundaries(self):
         self.performanceStartX = (Window.width/4 + Window.width / 16)
@@ -481,41 +501,7 @@ class MusicGame(Widget):
         self.mPlayer.setAudioStreamType(AudioManager.STREAM_NOTIFICATION)
         self.mPlayer.prepare()
         self.mPlayer.start()
-        #sleep(1)
-        #self.mPlayer.release()
 
-    def load_beats(self):
-        #resultsPresent = False
-        #file = open("Timings.txt", "a+")
-        #if file.mode == 'a+':
-        #    contents = file.read().splitlines()
-        #    print(contents)
-        #    for i in contents:
-        #        try:
-        #            self.barGenerator.beatPositions.append(float(i))
-        #        except:
-        #            #Break so doesn't load in previous scores as beat timings
-        #            if(i == "Results"):
-        #                resultsPresent = True
-        #            break
-
-        #    if(resultsPresent == False):
-        #        file.write("Results") 
-        #    file.close()
-        cleanpath = os.path.abspath("/sdcard/Music/SidecarFiles/" + self.songName + ".txt")
-        file = open(cleanpath, 'r')
-        print(os.listdir("/sdcard/"))
-
-        contents = file.read().splitlines()
-
-        for i in range (len(contents)):
-            try:
-                if(i != 0):
-                    self.barGenerator.beatPositions.append(float(contents[i]))
-            except:
-                print("error")
-
-        self.bpm = contents[0]
         
      #FIND A WAY TO COMPRESS THIS INTO ONE LINE THAT SUPPORTS MULTIPLE TIME SIGS
     #PURELY FOR TESTING  
@@ -678,7 +664,60 @@ class MusicGame(Widget):
 #        restartButton = kb.Button(text="Restart")
 #        restartButton.bind(on_press=self.start_game)
 #        self.add_widget(restartButton)
-                
+
+class SongMode(MusicGame):
+    def bar_setup_type(self):
+        self.barGenerator.curBarPositions = self.barGenerator.calculate_bars_song(0)
+        self.barGenerator.nextBarPositions = self.barGenerator.calculate_bars_song(self.barGenerator.time)
+
+        #Return how many bars the song contains
+        self.gameManager.maxBars = self.barGenerator.calculate_song_length()
+        self.gameManager.totalNotes = len(self.barGenerator.beatPositions)
+        self.draw_notes()
+
+    def load_beats(self):
+        cleanpath = os.path.abspath("/sdcard/Music/SidecarFiles/" + self.songName + ".txt")
+        file = open(cleanpath, 'r')
+        print(os.listdir("/sdcard/"))
+
+        contents = file.read().splitlines()
+
+        for i in range (len(contents)):
+            try:
+                if(i != 0):
+                    self.barGenerator.beatPositions.append(float(contents[i]))
+            except:
+                print("error")
+
+        self.bpm = contents[0]
+
+class RandomMode(MusicGame):
+
+    def bar_setup_type(self):
+        self.barGenerator.curBarPositions = self.barGenerator.calculate_bars_random(0)
+        self.barGenerator.nextBarPositions = self.barGenerator.calculate_bars_random(self.barGenerator.time)
+
+        #Return how many bars the song contains
+        self.gameManager.maxBars = 8
+        self.gameManager.totalNotes = len(self.barGenerator.beatPositions)
+        self.draw_notes()
+
+    def load_beats(self):
+        #Get BPM for chosen song
+        cleanpath = os.path.abspath("/sdcard/Music/SidecarFiles/" + self.songName + ".txt")
+        file = open(cleanpath, 'r')
+        print(os.listdir("/sdcard/"))
+        contents = file.read().splitlines()
+        self.bpm = contents[0]  
+
+        cleanpath = os.path.abspath("/sdcard/Music/SidecarFiles/RandomBeats.txt")
+        file = open(cleanpath, 'r')  
+        contents = file.read().splitlines()       
+
+        for i in range (len(contents)):
+            fields = contents[i].split(" ")
+            self.barGenerator.randomBarPositions.append(fields)
+
         
 #TestCommit
 menu = Builder.load_file("Menu.kv")

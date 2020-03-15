@@ -38,13 +38,16 @@ ScreenManager:
 			cols: 1
 			size_hint: (.3,1)
 			Button:
-				text: "Choose Song"
+				text: "Play Song"
 				on_release: 
 					app.root.current = "song"
 					root.manager.transition.direction = "left"
+                    root.manager.mode = "SongPlay"
 			Button:
-				text: "Test Button"
-				on_release: app.root.current = "song"
+				text: "Practise Random Bars"
+				on_release: 
+                    app.root.current = "song"
+                    root.manager.mode = "RandomPlay"
 			
 
 <SongSelect>
