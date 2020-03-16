@@ -45,6 +45,7 @@ import os
 from time import sleep
 import glob
 from functools import partial
+import re
 
 class MainMenu(Screen):
     pass
@@ -96,10 +97,20 @@ class ScreenManager(ScreenManager):
 #trouble with python decimal addition is causing problems with smaller beats
 class NoteType(Enum):
     fullNote = 1
-    halfNote = 0.5
-    quarterNote = 0.25
-    sixteethNote = 0.125
-    #thirtyNote = 0.075
+    halfNote = 2
+    quarterNote = 4
+    eigthNote = 8
+    sixteethNote = 16
+    fullNoteRest = "1r"
+    halfNoteRest = "2r"
+    quarterNoteRest = "4r"
+    eigthNoteRest = "8r"
+    sixteethNoteRest = "16r"
+    fullNoteTriplet = "1t"
+    halfNoteTriplet  = "2t"
+    quarterNoteTriplet  = "4t"
+    eigthNoteTriplet  = "8t"
+    sixteethNoteTriplet  = "16t"
     
 
 class MissType(Enum):
@@ -113,6 +124,8 @@ class Bars:
     randomBarPositions = [] #Holds bars for random bar choices
     curBarPositions = []   #Holds beat times for a bar of a song
     nextBarPositions = [] # Holds beat times for next bar of song
+    curBarNoteTypes = []  #Holds the type of note parallel to the cur bar 
+    nextBarNoteTypes = []   #Holds the type of note parallel to the next bar
 
     gameType = ""
 
@@ -171,8 +184,8 @@ class Bars:
                 self.curBarPositions = self.calculate_bars_song(self.lastBarTime)
                 self.nextBarPositions = self.calculate_bars_song((self.lastBarTime + self.time))
             else:
-                self.curBarPositions = self.calculate_bars_random(self.lastBarTime)
-                self.nextBarPositions = self.calculate_bars_random((self.lastBarTime + self.time))
+                self.curBarPositions, self.curBarNoteTypes = self.calculate_bars_random(self.lastBarTime)
+                self.nextBarPositions, self.nextBarNoteTypes = self.calculate_bars_random((self.lastBarTime + self.time))
 
             #self.construct_bar()
             return True
@@ -192,19 +205,29 @@ class Bars:
     def calculate_bars_random(self, lastTime):
         self.beatsPassed = 0
         beatHolder = []
+        beatTypes = []
         del beatHolder[:]
+        del beatTypes[:]
 
         randomBar = random.randint(0, len(self.randomBarPositions) - 1)
         lastBeatTime = 0
 
         for i in range(len(self.randomBarPositions[randomBar])):
             if(i != 0):
-                beatTiming = self.time / float(self.randomBarPositions[randomBar][i - 1])
+                #split the number out from the note type (4t/ 4r etc.)
+                number = re.findall('\d+', self.randomBarPositions[randomBar][i - 1])
+                beatTiming = self.time / float(number[0])
             else:
                 beatTiming = 0
+            
+            for noteType in NoteType:
+                if(str(self.randomBarPositions[randomBar][i]) == str(noteType.value)):
+                    beatTypes.append(noteType)
+
             beatHolder.append(beatTiming + lastBeatTime)
             lastBeatTime += beatTiming
-        return beatHolder
+        print("BeatTypes:", beatTypes)
+        return beatHolder, beatTypes
 
     def calculate_song_length(self):
         return math.ceil(self.beatPositions[-1] / self.time)
@@ -694,8 +717,8 @@ class SongMode(MusicGame):
 class RandomMode(MusicGame):
 
     def bar_setup_type(self):
-        self.barGenerator.curBarPositions = self.barGenerator.calculate_bars_random(0)
-        self.barGenerator.nextBarPositions = self.barGenerator.calculate_bars_random(self.barGenerator.time)
+        self.barGenerator.curBarPositions, self.barGenerator.curBarNoteTypes = self.barGenerator.calculate_bars_random(0)
+        self.barGenerator.nextBarPositions, self.barGenerator.nextBarNoteTypes = self.barGenerator.calculate_bars_random(self.barGenerator.time)
 
         #Return how many bars the song contains
         self.gameManager.maxBars = 8
