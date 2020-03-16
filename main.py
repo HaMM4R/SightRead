@@ -583,8 +583,19 @@ class MusicGame(Widget):
             #offset = (self.barGenerator.curBarPositions[i] * 100)
             draw = ((self.barOneSizeX) * offset) + self.barOneStartX
             with self.canvas:
-                Rectangle(pos=(draw, self.barOneStartY- self.barOneSizeY), size=(2, self.barOneSizeY - distBetween))
-                Ellipse(pos=(draw - distBetween, self.barOneStartY - self.barOneSizeY), size=(distBetween, distBetween))
+                if(self.barGenerator.curBarNoteTypes[i] == NoteType.fullNoteRest):
+                    Label(text="1/1R", font_size = 50, pos = (draw, self.barOneStartY- self.barOneSizeY))
+                elif(self.barGenerator.curBarNoteTypes[i] == NoteType.halfNoteRest):
+                    Label(text="1/2R", font_size = 50, pos = (draw, self.barOneStartY- self.barOneSizeY))
+                elif(self.barGenerator.curBarNoteTypes[i] == NoteType.quarterNoteRest):
+                    Label(text="1/4R", font_size = 50, pos = (draw, self.barOneStartY- self.barOneSizeY))
+                elif(self.barGenerator.curBarNoteTypes[i] == NoteType.eigthNoteRest):
+                    Label(text="1/8R", font_size = 50, pos = (draw, self.barOneStartY- self.barOneSizeY))
+                elif(self.barGenerator.curBarNoteTypes[i] == NoteType.sixteethNoteRest):
+                    Label(text="1/16R", font_size = 50, pos = (draw, self.barOneStartY- self.barOneSizeY))
+                else:
+                    Rectangle(pos=(draw, self.barOneStartY- self.barOneSizeY), size=(2, self.barOneSizeY - distBetween))
+                    Ellipse(pos=(draw - distBetween, self.barOneStartY - self.barOneSizeY), size=(distBetween, distBetween))
 
         #Next Bar
         for i in range(len(self.barGenerator.nextBarPositions)):
@@ -595,8 +606,19 @@ class MusicGame(Widget):
             #offset = (self.barGenerator.curBarPositions[i] * 100)
             draw = ((self.barTwoSizeX) * offset) + self.barTwoStartX
             with self.canvas:
-                Rectangle(pos=(draw, self.barTwoStartY- self.barTwoSizeY - self.barTwoPosOffset), size=(2, self.barTwoSizeY - distBetween))
-                Ellipse(pos=(draw - (distBetween), self.barTwoStartY - self.barTwoSizeY - self.barTwoPosOffset), size=(distBetween, distBetween))
+                if(self.barGenerator.nextBarNoteTypes[i] == NoteType.fullNoteRest):
+                    Label(text="1/1R", font_size = 50, pos = (draw, self.barTwoStartY- self.barTwoSizeY - self.barTwoPosOffset))
+                elif(self.barGenerator.nextBarNoteTypes[i] == NoteType.halfNoteRest):
+                    Label(text="1/2R", font_size = 50, pos = (draw, self.barTwoStartY- self.barTwoSizeY - self.barTwoPosOffset))
+                elif(self.barGenerator.nextBarNoteTypes[i] == NoteType.quarterNoteRest):
+                    Label(text="1/4R", font_size = 50, pos = (draw, self.barTwoStartY- self.barTwoSizeY - self.barTwoPosOffset))
+                elif(self.barGenerator.nextBarNoteTypes[i] == NoteType.eigthNoteRest):
+                    Label(text="1/8R", font_size = 50, pos = (draw, self.barTwoStartY- self.barTwoSizeY - self.barTwoPosOffset))
+                elif(self.barGenerator.nextBarNoteTypes[i] == NoteType.sixteethNoteRest):
+                    Label(text="1/16R", font_size = 50, pos = (draw, self.barTwoStartY- self.barTwoSizeY - self.barTwoPosOffset))
+                else:
+                    Rectangle(pos=(draw, self.barTwoStartY- self.barTwoSizeY - self.barTwoPosOffset), size=(2, self.barTwoSizeY - distBetween))
+                    Ellipse(pos=(draw - (distBetween), self.barTwoStartY - self.barTwoSizeY - self.barTwoPosOffset), size=(distBetween, distBetween))
                 
     def assign_labels(self):
             with self.canvas:
