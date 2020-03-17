@@ -215,28 +215,28 @@ class Bars:
 
         for i in range(len(self.randomBarPositions[randomBar])):
             #Check to see noteType
-            for noteType in NoteType:
-                if(str(self.randomBarPositions[randomBar][i]) == str(noteType.value)):
-                    if(noteType != NoteType.fullNoteTriplet and noteType != NoteType.halfNoteTriplet and noteType != NoteType.quarterNoteTriplet and noteType != NoteType.eigthNoteTriplet and noteType != NoteType.sixteethNoteTriplet):
-                        beatTypes.append(noteType)
-                    else:
-                        for i in range(0,3):
-                            beatTypes.append(noteType)
-
             if(i != 0):
                 #split the number out from the note type (4t/ 4r etc.)
                 number = re.findall('\d+', self.randomBarPositions[randomBar][i - 1])
                 #If not triplet set beat timing
                 #If triplet run through 3 times and append
-                if(beatTypes[i] != NoteType.fullNoteTriplet and beatTypes[i] != NoteType.halfNoteTriplet and beatTypes[i] != NoteType.quarterNoteTriplet and beatTypes[i] != NoteType.eigthNoteTriplet and beatTypes[i] != NoteType.sixteethNoteTriplet):
+                if(str(self.randomBarPositions[randomBar][i]) != str(NoteType.fullNoteTriplet.value) and str(self.randomBarPositions[randomBar][i]) != str(NoteType.halfNoteTriplet.value) and str(self.randomBarPositions[randomBar][i]) != str(NoteType.quarterNoteTriplet.value) and str(self.randomBarPositions[randomBar][i]) != str(NoteType.eigthNoteTriplet.value) and str(self.randomBarPositions[randomBar][i]) != str(NoteType.sixteethNoteTriplet.value)):
                     beatTiming = self.time / float(number[0])
                 else:
-                    for i in range(0, 2):
+                    for j in range(0, 3):
                         beatTiming = self.time / (float(number[0] * 3))
                         beatHolder.append(beatTiming + lastBeatTime)
                         lastBeatTime += beatTiming
             else:
-                beatTiming = 0
+                beatTiming = 0  
+
+            for noteType in NoteType:
+                if(str(self.randomBarPositions[randomBar][i]) == str(noteType.value)):
+                    if(str(self.randomBarPositions[randomBar][i]) != str(NoteType.fullNoteTriplet.value) and str(self.randomBarPositions[randomBar][i]) != str(NoteType.halfNoteTriplet.value) and str(self.randomBarPositions[randomBar][i]) != str(NoteType.quarterNoteTriplet.value) and str(self.randomBarPositions[randomBar][i]) != str(NoteType.eigthNoteTriplet.value) and str(self.randomBarPositions[randomBar][i]) != str(NoteType.sixteethNoteTriplet.value)):
+                        beatTypes.append(noteType)
+                    else:
+                        for j in range(0,3):
+                            beatTypes.append(noteType)
 
             #Appends to beatHolder if not a triplet, if it is its handled earlier in the code
             if(beatTypes[i] != NoteType.fullNoteTriplet and beatTypes[i] != NoteType.halfNoteTriplet and beatTypes[i] != NoteType.quarterNoteTriplet and beatTypes[i] != NoteType.eigthNoteTriplet and beatTypes[i] != NoteType.sixteethNoteTriplet):
@@ -596,23 +596,24 @@ class MusicGame(Widget):
             offset = (self.barGenerator.curBarPositions[i] / self.barGenerator.time)
             #offset = (self.barGenerator.curBarPositions[i] * 100)
             draw = ((self.barOneSizeX) * offset) + self.barOneStartX
-            print("BAR GENERATE", self.barGenerator.curBarNoteTypes)
-            print("BAR GEN LENGTH", len(self.barGenerator.curBarNoteTypes))
-            print("I VALUE: ", i)
             with self.canvas:
-                if(self.barGenerator.curBarNoteTypes[i] == NoteType.fullNoteRest):
-                    Label(text="1/1R", font_size = 50, pos = (draw, self.barOneStartY- self.barOneSizeY))
-                elif(self.barGenerator.curBarNoteTypes[i] == NoteType.halfNoteRest):
-                    Label(text="1/2R", font_size = 50, pos = (draw, self.barOneStartY- self.barOneSizeY))
-                elif(self.barGenerator.curBarNoteTypes[i] == NoteType.quarterNoteRest):
-                    Label(text="1/4R", font_size = 50, pos = (draw, self.barOneStartY- self.barOneSizeY))
-                elif(self.barGenerator.curBarNoteTypes[i] == NoteType.eigthNoteRest):
-                    Label(text="1/8R", font_size = 50, pos = (draw, self.barOneStartY- self.barOneSizeY))
-                elif(self.barGenerator.curBarNoteTypes[i] == NoteType.sixteethNoteRest):
-                    Label(text="1/16R", font_size = 50, pos = (draw, self.barOneStartY- self.barOneSizeY))
+                if(len(self.barGenerator.curBarNoteTypes) > 0):
+                    if(self.barGenerator.curBarNoteTypes[i] == NoteType.fullNoteRest):
+                        Label(text="1/1R", font_size = 50, pos = (draw, self.barOneStartY- self.barOneSizeY))
+                    elif(self.barGenerator.curBarNoteTypes[i] == NoteType.halfNoteRest):
+                        Label(text="1/2R", font_size = 50, pos = (draw, self.barOneStartY- self.barOneSizeY))
+                    elif(self.barGenerator.curBarNoteTypes[i] == NoteType.quarterNoteRest):
+                        Label(text="1/4R", font_size = 50, pos = (draw, self.barOneStartY- self.barOneSizeY))
+                    elif(self.barGenerator.curBarNoteTypes[i] == NoteType.eigthNoteRest):
+                        Label(text="1/8R", font_size = 50, pos = (draw, self.barOneStartY- self.barOneSizeY))
+                    elif(self.barGenerator.curBarNoteTypes[i] == NoteType.sixteethNoteRest):
+                        Label(text="1/16R", font_size = 50, pos = (draw, self.barOneStartY- self.barOneSizeY))
+                    else:
+                        Rectangle(pos=(draw, self.barOneStartY- self.barOneSizeY), size=(2, self.barOneSizeY - distBetween))
+                        Ellipse(pos=(draw - distBetween, self.barOneStartY - self.barOneSizeY), size=(distBetween, distBetween))
                 else:
-                    Rectangle(pos=(draw, self.barOneStartY- self.barOneSizeY), size=(2, self.barOneSizeY - distBetween))
-                    Ellipse(pos=(draw - distBetween, self.barOneStartY - self.barOneSizeY), size=(distBetween, distBetween))
+                        Rectangle(pos=(draw, self.barOneStartY- self.barOneSizeY), size=(2, self.barOneSizeY - distBetween))
+                        Ellipse(pos=(draw - distBetween, self.barOneStartY - self.barOneSizeY), size=(distBetween, distBetween))
 
         #Next Bar
         for i in range(len(self.barGenerator.nextBarPositions)):
@@ -623,16 +624,20 @@ class MusicGame(Widget):
             #offset = (self.barGenerator.curBarPositions[i] * 100)
             draw = ((self.barTwoSizeX) * offset) + self.barTwoStartX
             with self.canvas:
-                if(self.barGenerator.nextBarNoteTypes[i] == NoteType.fullNoteRest):
-                    Label(text="1/1R", font_size = 50, pos = (draw, self.barTwoStartY- self.barTwoSizeY - self.barTwoPosOffset))
-                elif(self.barGenerator.nextBarNoteTypes[i] == NoteType.halfNoteRest):
-                    Label(text="1/2R", font_size = 50, pos = (draw, self.barTwoStartY- self.barTwoSizeY - self.barTwoPosOffset))
-                elif(self.barGenerator.nextBarNoteTypes[i] == NoteType.quarterNoteRest):
-                    Label(text="1/4R", font_size = 50, pos = (draw, self.barTwoStartY- self.barTwoSizeY - self.barTwoPosOffset))
-                elif(self.barGenerator.nextBarNoteTypes[i] == NoteType.eigthNoteRest):
-                    Label(text="1/8R", font_size = 50, pos = (draw, self.barTwoStartY- self.barTwoSizeY - self.barTwoPosOffset))
-                elif(self.barGenerator.nextBarNoteTypes[i] == NoteType.sixteethNoteRest):
-                    Label(text="1/16R", font_size = 50, pos = (draw, self.barTwoStartY- self.barTwoSizeY - self.barTwoPosOffset))
+                if(len(self.barGenerator.curBarNoteTypes) > 0):
+                    if(self.barGenerator.nextBarNoteTypes[i] == NoteType.fullNoteRest):
+                        Label(text="1/1R", font_size = 50, pos = (draw, self.barTwoStartY- self.barTwoSizeY - self.barTwoPosOffset))
+                    elif(self.barGenerator.nextBarNoteTypes[i] == NoteType.halfNoteRest):
+                        Label(text="1/2R", font_size = 50, pos = (draw, self.barTwoStartY- self.barTwoSizeY - self.barTwoPosOffset))
+                    elif(self.barGenerator.nextBarNoteTypes[i] == NoteType.quarterNoteRest):
+                        Label(text="1/4R", font_size = 50, pos = (draw, self.barTwoStartY- self.barTwoSizeY - self.barTwoPosOffset))
+                    elif(self.barGenerator.nextBarNoteTypes[i] == NoteType.eigthNoteRest):
+                        Label(text="1/8R", font_size = 50, pos = (draw, self.barTwoStartY- self.barTwoSizeY - self.barTwoPosOffset))
+                    elif(self.barGenerator.nextBarNoteTypes[i] == NoteType.sixteethNoteRest):
+                        Label(text="1/16R", font_size = 50, pos = (draw, self.barTwoStartY- self.barTwoSizeY - self.barTwoPosOffset))
+                    else:
+                        Rectangle(pos=(draw, self.barTwoStartY- self.barTwoSizeY - self.barTwoPosOffset), size=(2, self.barTwoSizeY - distBetween))
+                        Ellipse(pos=(draw - (distBetween), self.barTwoStartY - self.barTwoSizeY - self.barTwoPosOffset), size=(distBetween, distBetween))
                 else:
                     Rectangle(pos=(draw, self.barTwoStartY- self.barTwoSizeY - self.barTwoPosOffset), size=(2, self.barTwoSizeY - distBetween))
                     Ellipse(pos=(draw - (distBetween), self.barTwoStartY - self.barTwoSizeY - self.barTwoPosOffset), size=(distBetween, distBetween))
