@@ -140,6 +140,7 @@ class Bars:
     beatsPassed = 0
     
     missMargin = 0.1
+
     
     def calc_bar_time(self, BPM):
         bps = float(60/float(BPM))
@@ -213,21 +214,38 @@ class Bars:
         lastBeatTime = 0
 
         for i in range(len(self.randomBarPositions[randomBar])):
+            #Check to see noteType
+            for noteType in NoteType:
+                if(str(self.randomBarPositions[randomBar][i]) == str(noteType.value)):
+                    if(noteType != NoteType.fullNoteTriplet and noteType != NoteType.halfNoteTriplet and noteType != NoteType.quarterNoteTriplet and noteType != NoteType.eigthNoteTriplet and noteType != NoteType.sixteethNoteTriplet):
+                        beatTypes.append(noteType)
+                    else:
+                        for i in range(0,3):
+                            beatTypes.append(noteType)
+
             if(i != 0):
                 #split the number out from the note type (4t/ 4r etc.)
                 number = re.findall('\d+', self.randomBarPositions[randomBar][i - 1])
-                beatTiming = self.time / float(number[0])
+                #If not triplet set beat timing
+                #If triplet run through 3 times and append
+                if(beatTypes[i] != NoteType.fullNoteTriplet and beatTypes[i] != NoteType.halfNoteTriplet and beatTypes[i] != NoteType.quarterNoteTriplet and beatTypes[i] != NoteType.eigthNoteTriplet and beatTypes[i] != NoteType.sixteethNoteTriplet):
+                    beatTiming = self.time / float(number[0])
+                else:
+                    for i in range(0, 2):
+                        beatTiming = self.time / (float(number[0] * 3))
+                        beatHolder.append(beatTiming + lastBeatTime)
+                        lastBeatTime += beatTiming
             else:
                 beatTiming = 0
-            
-            for noteType in NoteType:
-                if(str(self.randomBarPositions[randomBar][i]) == str(noteType.value)):
-                    beatTypes.append(noteType)
 
-            beatHolder.append(beatTiming + lastBeatTime)
-            lastBeatTime += beatTiming
+            #Appends to beatHolder if not a triplet, if it is its handled earlier in the code
+            if(beatTypes[i] != NoteType.fullNoteTriplet and beatTypes[i] != NoteType.halfNoteTriplet and beatTypes[i] != NoteType.quarterNoteTriplet and beatTypes[i] != NoteType.eigthNoteTriplet and beatTypes[i] != NoteType.sixteethNoteTriplet):
+                beatHolder.append(beatTiming + lastBeatTime)
+                lastBeatTime += beatTiming
+
         print("BeatTypes:", beatTypes)
         return beatHolder, beatTypes
+
 
     def calculate_song_length(self):
         return math.ceil(self.beatPositions[-1] / self.time)
@@ -439,8 +457,6 @@ class MusicGame(Widget):
 
         self.barTwoPosOffset = 30
 
-        
-
     def end_game(self):
         self.mPlayer.release()
         file = open("Timings.txt", "a")
@@ -487,17 +503,16 @@ class MusicGame(Widget):
             if(self.barGenerator.bar_setup(dt)):
                 self.bar_updated()
             
-            if(self.barGenerator.miss_beat(self.notesHitInBar)):
+            if(self.barGenerator.miss_beat(self.notesHitInBar)):                        
                 self.player1.hit_note(False)
-                self.player1.success_meter(MissType.missDecrease)
+                self.player1.success_meter(MissType.missDecrease)                                                    
 
-            if(self.player1.curSuccess <= 0):
-                self.gameEnded = True
-                self.passedSong = False
-                self.end_game()   
+            if(self.player1.curSuccess <= 0):                               
+                self.gameEnded = True                                       
+                self.passedSong = False                                     
+                self.end_game()                                                 
 
             self.timingHelp.center_x = float(self.timingHelp.center_x) + (float(self.barOneSizeX) / float(self.barGenerator.time) / Clock.get_rfps())
-            print(Clock.get_rfps())
             
             self.performanceMeter.center_x = self.performanceStartX + ((float(self.player1.curSuccess) / 100) * self.performanceSizeX)
             self.draw_labels()
@@ -573,7 +588,6 @@ class MusicGame(Widget):
 
     def draw_notes(self):
         distBetween = self.barOneSizeY / 5
-
         #Current Bar
         for i in range(len(self.barGenerator.curBarPositions)):
             #This offset for loaded in bars
@@ -582,6 +596,9 @@ class MusicGame(Widget):
             offset = (self.barGenerator.curBarPositions[i] / self.barGenerator.time)
             #offset = (self.barGenerator.curBarPositions[i] * 100)
             draw = ((self.barOneSizeX) * offset) + self.barOneStartX
+            print("BAR GENERATE", self.barGenerator.curBarNoteTypes)
+            print("BAR GEN LENGTH", len(self.barGenerator.curBarNoteTypes))
+            print("I VALUE: ", i)
             with self.canvas:
                 if(self.barGenerator.curBarNoteTypes[i] == NoteType.fullNoteRest):
                     Label(text="1/1R", font_size = 50, pos = (draw, self.barOneStartY- self.barOneSizeY))
