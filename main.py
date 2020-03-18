@@ -220,15 +220,20 @@ class Bars:
                 number = re.findall('\d+', self.randomBarPositions[randomBar][i - 1])
                 #If not triplet set beat timing
                 #If triplet run through 3 times and append
-                if(str(self.randomBarPositions[randomBar][i]) != str(NoteType.fullNoteTriplet.value) and str(self.randomBarPositions[randomBar][i]) != str(NoteType.halfNoteTriplet.value) and str(self.randomBarPositions[randomBar][i]) != str(NoteType.quarterNoteTriplet.value) and str(self.randomBarPositions[randomBar][i]) != str(NoteType.eigthNoteTriplet.value) and str(self.randomBarPositions[randomBar][i]) != str(NoteType.sixteethNoteTriplet.value)):
-                    beatTiming = self.time / float(number[0])
-                else:
-                    for j in range(0, 3):
-                        beatTiming = self.time / (float(number[0] * 3))
-                        beatHolder.append(beatTiming + lastBeatTime)
-                        lastBeatTime += beatTiming
+                #if(str(self.randomBarPositions[randomBar][i]) != str(NoteType.fullNoteTriplet.value) and str(self.randomBarPositions[randomBar][i]) != str(NoteType.halfNoteTriplet.value) and str(self.randomBarPositions[randomBar][i]) != str(NoteType.quarterNoteTriplet.value) and str(self.randomBarPositions[randomBar][i]) != str(NoteType.eigthNoteTriplet.value) and str(self.randomBarPositions[randomBar][i]) != str(NoteType.sixteethNoteTriplet.value)):
+                beatTiming = self.time / float(number[0])
+                beatHolder.append(beatTiming + lastBeatTime)
+                lastBeatTime += beatTiming
+               # else:
+               #     for j in range(1, 3):
+               #         beatTiming = self.time / (float(number[0] * 3) * j)
+               #         print("TRIPLET ")
+               #         beatHolder.append(beatTiming + lastBeatTime)
+               #         lastBeatTime += beatTiming
             else:
-                beatTiming = 0  
+                beatTiming = 0 
+                beatHolder.append(beatTiming + lastBeatTime)
+                lastBeatTime += beatTiming 
 
             for noteType in NoteType:
                 if(str(self.randomBarPositions[randomBar][i]) == str(noteType.value)):
@@ -239,11 +244,10 @@ class Bars:
                             beatTypes.append(noteType)
 
             #Appends to beatHolder if not a triplet, if it is its handled earlier in the code
-            if(beatTypes[i] != NoteType.fullNoteTriplet and beatTypes[i] != NoteType.halfNoteTriplet and beatTypes[i] != NoteType.quarterNoteTriplet and beatTypes[i] != NoteType.eigthNoteTriplet and beatTypes[i] != NoteType.sixteethNoteTriplet):
-                beatHolder.append(beatTiming + lastBeatTime)
-                lastBeatTime += beatTiming
+           # if(beatTypes[i] != NoteType.fullNoteTriplet and beatTypes[i] != NoteType.halfNoteTriplet and beatTypes[i] != NoteType.quarterNoteTriplet and beatTypes[i] != NoteType.eigthNoteTriplet and beatTypes[i] != NoteType.sixteethNoteTriplet):
+           #     beatHolder.append(beatTiming + lastBeatTime)
+           #     lastBeatTime += beatTiming
 
-        print("BeatTypes:", beatTypes)
         return beatHolder, beatTypes
 
 
@@ -588,6 +592,10 @@ class MusicGame(Widget):
 
     def draw_notes(self):
         distBetween = self.barOneSizeY / 5
+        print("BAR POSITION:", self.barGenerator.curBarPositions)
+        print("BAR POSITION COUNT:", len(self.barGenerator.curBarPositions))
+        print("NOTETYPESL: ", self.barGenerator.curBarNoteTypes)
+        print("NOTETYPESCpimt: ", len(self.barGenerator.curBarNoteTypes))
         #Current Bar
         for i in range(len(self.barGenerator.curBarPositions)):
             #This offset for loaded in bars
