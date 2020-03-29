@@ -13,8 +13,10 @@
 #You should have received a copy of the GNU General Public License
 #along with Sight Read.  If not, see <https://www.gnu.org/licenses/>.
 
-from android.permissions import request_permissions, Permission
-request_permissions([Permission.WRITE_EXTERNAL_STORAGE, Permission.READ_EXTERNAL_STORAGE])
+from kivy.utils import platform
+if(platform == 'android'):
+    from android.permissions import request_permissions, Permission
+    request_permissions([Permission.WRITE_EXTERNAL_STORAGE, Permission.READ_EXTERNAL_STORAGE])
 from kivy.app import App
 from kivy.core.window import Window
 from kivy.uix.widget import Widget
@@ -22,7 +24,6 @@ from kivy.uix.label import Label
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.button import Button
 from kivy.uix.scrollview import ScrollView
-from kivy.uix.recycleview import RecycleView
 import kivy.uix.button as kb
 from kivy.properties import (
     NumericProperty, ReferenceListProperty, ObjectProperty
@@ -40,7 +41,8 @@ from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.animation import Animation
 from kivy.uix.image import Image
 import math
-from jnius import autoclass 
+if(platform == 'android'):
+    from jnius import autoclass 
 import os
 from time import sleep
 import glob
@@ -51,11 +53,18 @@ class MainMenu(Screen):
     pass
 
 class SongSelect(Screen):
+    musicDIR = ''
     def on_enter(self):
-        entries = os.listdir('/sdcard/Music')
+        #Check platform to get directory for music
+        if(platform == 'android'):
+            self.musicDIR = '/sdcard/Music'
+        else:
+            fileDIR = os.path.dirname(os.path.realpath('__file__'))
+            self.musicDIR = str(fileDIR) + "/Music"
+        entries = os.listdir(self.musicDIR)
         print(entries)
         for i in range(len(entries)):
-            btn = Button(text=str(entries[i]))
+            btn = Button(text=str(entries[i]))  
             btn.size = (Window.width / 2, Window.height / 8)
             btn.size_hint = (None, None)
             btn.center_x = Window.width / 2
@@ -66,6 +75,7 @@ class SongSelect(Screen):
     
     def switch_screen(self, *args):
         self.manager.current = "game"
+        self.manager.musicDIR = self.musicDIR
         self.manager.songName = args[0]
         self.manager.transition.direction = "right"
 
@@ -425,6 +435,7 @@ class MusicGame(Widget):
 
     bpm = 0
 
+
     def start_game(self, screenManager):
         self.manager = screenManager
         self.songName = self.manager.songName
@@ -433,7 +444,10 @@ class MusicGame(Widget):
         self.calculate_boundaries()
         self.draw_background()
         self.load_beats()
-        self.load_song()
+        if(platform == 'android'):
+            self.load_song_android()
+        else:
+            self.load_song_desktop()
 
         self.barGenerator.gameType = self.gameMode
         self.barGenerator.calc_bar_time(self.bpm)
@@ -462,7 +476,8 @@ class MusicGame(Widget):
         self.barTwoPosOffset = 30
 
     def end_game(self):
-        self.mPlayer.release()
+        if(platform == 'android'):
+            self.mPlayer.release()
         file = open("Timings.txt", "a")
         if file.mode == 'a':
             file.writelines(("\n",str(self.player1.curScore)))
@@ -531,18 +546,24 @@ class MusicGame(Widget):
             self.passedSong = True
             self.end_game()
     
-    def load_song(self):
+    def load_song_android(self):
         print("loading song")
-        songSource = ('/sdcard/Music/', str(self.songName))
+        songsDIR = str(self.manager.musicDIR)
+        songSource = (songsDIR, '/', str(self.songName))
         #self.sound = SoundLoader.load('song.mp3')
         #self.sound.play()
         MediaPlayer = autoclass('android.media.MediaPlayer')
         AudioManager = autoclass('android.media.AudioManager')
         self.mPlayer = MediaPlayer()
-        self.mPlayer.setDataSource('/sdcard/Music/' + self.songName)
+        self.mPlayer.setDataSource(songsDIR + '/' + self.songName)
         self.mPlayer.setAudioStreamType(AudioManager.STREAM_NOTIFICATION)
         self.mPlayer.prepare()
         self.mPlayer.start()
+
+    def load_song_desktop(self):
+        songDIR = (self.manager.musicDIR + '/' + str(self.songName))
+        sound = SoundLoader.load(songDIR)
+        sound.play()
 
         
      #FIND A WAY TO COMPRESS THIS INTO ONE LINE THAT SUPPORTS MULTIPLE TIME SIGS
@@ -751,9 +772,8 @@ class SongMode(MusicGame):
         self.draw_notes()
 
     def load_beats(self):
-        cleanpath = os.path.abspath("/sdcard/Music/SidecarFiles/" + self.songName + ".txt")
+        cleanpath = os.path.abspath(self.manager.musicDIR + "/SidecarFiles/" + self.songName + ".txt")
         file = open(cleanpath, 'r')
-        print(os.listdir("/sdcard/"))
 
         contents = file.read().splitlines()
 
@@ -779,13 +799,12 @@ class RandomMode(MusicGame):
 
     def load_beats(self):
         #Get BPM for chosen song
-        cleanpath = os.path.abspath("/sdcard/Music/SidecarFiles/" + self.songName + ".txt")
+        cleanpath = os.path.abspath(self.manager.musicDIR + "/SidecarFiles/" + self.songName + ".txt")
         file = open(cleanpath, 'r')
-        print(os.listdir("/sdcard/"))
         contents = file.read().splitlines()
         self.bpm = contents[0]  
 
-        cleanpath = os.path.abspath("/sdcard/Music/SidecarFiles/RandomBeats.txt")
+        cleanpath = os.path.abspath(self.manager.musicDIR + "/SidecarFiles/" + "RandomBeats.txt")
         file = open(cleanpath, 'r')  
         contents = file.read().splitlines()       
 
