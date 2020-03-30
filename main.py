@@ -64,14 +64,15 @@ class SongSelect(Screen):
         entries = os.listdir(self.musicDIR)
         print(entries)
         for i in range(len(entries)):
-            btn = Button(text=str(entries[i]))  
-            btn.size = (Window.width / 2, Window.height / 8)
-            btn.size_hint = (None, None)
-            btn.center_x = Window.width / 2
-            btn.center_y = (Window.height - (Window.height / 8 * i)) - Window.height / 8
-            buttoncallback = partial(self.switch_screen, btn.text)
-            btn.bind(on_press=buttoncallback)
-            self.add_widget(btn)
+            if(entries[i] != 'SidecarFiles'):
+                btn = Button(text=str(entries[i]))  
+                btn.size = (Window.width / 2, Window.height / 8)
+                btn.size_hint = (None, None)
+                btn.center_x = Window.width / 2
+                btn.center_y = (Window.height - (Window.height / 8 * i)) - Window.height / 8
+                buttoncallback = partial(self.switch_screen, btn.text)
+                btn.bind(on_press=buttoncallback)
+                self.add_widget(btn)
     
     def switch_screen(self, *args):
         self.manager.current = "game"
@@ -224,27 +225,50 @@ class Bars:
         lastBeatTime = 0
 
         for i in range(len(self.randomBarPositions[randomBar])):
-            #Check to see noteType
+            
+            #Sets the first note to 0 distance on the staff so other notes can be positioned accordingly 
             if(i != 0):
                 #split the number out from the note type (4t/ 4r etc.)
+                #This number is used to divide the length of the staff for proper note positioning
+                #Gets the value of the last note so can space the current note the correct distance away on the staff 
                 number = re.findall('\d+', self.randomBarPositions[randomBar][i - 1])
+
                 #If not triplet set beat timing
                 #If triplet run through 3 times and append
-                #if(str(self.randomBarPositions[randomBar][i]) != str(NoteType.fullNoteTriplet.value) and str(self.randomBarPositions[randomBar][i]) != str(NoteType.halfNoteTriplet.value) and str(self.randomBarPositions[randomBar][i]) != str(NoteType.quarterNoteTriplet.value) and str(self.randomBarPositions[randomBar][i]) != str(NoteType.eigthNoteTriplet.value) and str(self.randomBarPositions[randomBar][i]) != str(NoteType.sixteethNoteTriplet.value)):
-                beatTiming = self.time / float(number[0])
-                beatHolder.append(beatTiming + lastBeatTime)
-                lastBeatTime += beatTiming
-               # else:
-               #     for j in range(1, 3):
-               #         beatTiming = self.time / (float(number[0] * 3) * j)
-               #         print("TRIPLET ")
-               #         beatHolder.append(beatTiming + lastBeatTime)
-               #         lastBeatTime += beatTiming
+                if(str(self.randomBarPositions[randomBar][i]) != str(NoteType.fullNoteTriplet.value) and str(self.randomBarPositions[randomBar][i]) != str(NoteType.halfNoteTriplet.value) and str(self.randomBarPositions[randomBar][i]) != str(NoteType.quarterNoteTriplet.value) and str(self.randomBarPositions[randomBar][i]) != str(NoteType.eigthNoteTriplet.value) and str(self.randomBarPositions[randomBar][i]) != str(NoteType.sixteethNoteTriplet.value)):
+                    #Checks to see if the last note was a triplet and if so reduces the spacing as otherwise would result in an entire quarter note gap after a triplet
+                    if(str(self.randomBarPositions[randomBar][i - 1]) == str(NoteType.fullNoteTriplet.value) or str(self.randomBarPositions[randomBar][i - 1]) == str(NoteType.halfNoteTriplet.value) or str(self.randomBarPositions[randomBar][i - 1]) == str(NoteType.quarterNoteTriplet.value) or str(self.randomBarPositions[randomBar][i]) == str(NoteType.eigthNoteTriplet.value) or str(self.randomBarPositions[randomBar][i - 1]) == str(NoteType.sixteethNoteTriplet.value)):
+                        beatTiming = self.time / (float(number[0]) * 3)
+                    else:
+                        beatTiming = self.time / float(number[0])
+                    beatHolder.append(beatTiming + lastBeatTime)
+                    lastBeatTime += beatTiming 
+                else:
+                    for j in range(0, 3):
+                        #To get proper spacing between notes the first note of a triplet is spaced according to the type of note (eg 1/4 note, 1/8 etc)
+                        if(j == 0):
+                            beatTiming = (self.time / (float(number[0])))
+                        #The rest of the notes in the triplet are then spaced 3rd of the total note duration (eg 1/4 note triplet) apart (meaning the length of the staff is divided by 12 for a 1/4 note)
+                        else:
+                            beatTiming = (self.time / (float(number[0]) * 3))
+                        beatHolder.append(beatTiming + lastBeatTime)
+                        lastBeatTime += beatTiming
             else:
-                beatTiming = 0 
-                beatHolder.append(beatTiming + lastBeatTime)
-                lastBeatTime += beatTiming 
-
+                #Does the same as above but starting the first note at 0 rather than, for example a 1/4 of the way down the staff for a quarter note
+                if(str(self.randomBarPositions[randomBar][i]) != str(NoteType.fullNoteTriplet.value) and str(self.randomBarPositions[randomBar][i]) != str(NoteType.halfNoteTriplet.value) and str(self.randomBarPositions[randomBar][i]) != str(NoteType.quarterNoteTriplet.value) and str(self.randomBarPositions[randomBar][i]) != str(NoteType.eigthNoteTriplet.value) and str(self.randomBarPositions[randomBar][i]) != str(NoteType.sixteethNoteTriplet.value)):
+                    beatTiming = 0 
+                    beatHolder.append(beatTiming + lastBeatTime)
+                    lastBeatTime += beatTiming 
+                else:
+                    number = re.findall('\d+', self.randomBarPositions[randomBar][i])
+                    for j in range(0, 3):
+                        if(j == 0):
+                            beatTiming = 0
+                        else:
+                            beatTiming = (self.time / (float(number[0]) * 3))
+                        beatHolder.append(beatTiming + lastBeatTime)
+                        lastBeatTime += beatTiming
+            #Assigns what type of note it is to an arrray so it can be used to decide what to draw to the screen later in the application
             for noteType in NoteType:
                 if(str(self.randomBarPositions[randomBar][i]) == str(noteType.value)):
                     if(str(self.randomBarPositions[randomBar][i]) != str(NoteType.fullNoteTriplet.value) and str(self.randomBarPositions[randomBar][i]) != str(NoteType.halfNoteTriplet.value) and str(self.randomBarPositions[randomBar][i]) != str(NoteType.quarterNoteTriplet.value) and str(self.randomBarPositions[randomBar][i]) != str(NoteType.eigthNoteTriplet.value) and str(self.randomBarPositions[randomBar][i]) != str(NoteType.sixteethNoteTriplet.value)):
@@ -252,11 +276,6 @@ class Bars:
                     else:
                         for j in range(0,3):
                             beatTypes.append(noteType)
-
-            #Appends to beatHolder if not a triplet, if it is its handled earlier in the code
-           # if(beatTypes[i] != NoteType.fullNoteTriplet and beatTypes[i] != NoteType.halfNoteTriplet and beatTypes[i] != NoteType.quarterNoteTriplet and beatTypes[i] != NoteType.eigthNoteTriplet and beatTypes[i] != NoteType.sixteethNoteTriplet):
-           #     beatHolder.append(beatTiming + lastBeatTime)
-           #     lastBeatTime += beatTiming
 
         return beatHolder, beatTypes
 
@@ -675,7 +694,7 @@ class MusicGame(Widget):
             with self.canvas:
                 self.score = Label(text= ("Score: " + str(self.player1.curScore)), font_size=50)
                 self.multiplier = Label(text= ("Multiplier: " + str(self.player1.currentScoreMultipler)), font_size=50)
-                self.conCurNotes = Label(text= ("Steak: " + str(self.player1.concurrentNotes)), font_size=50)
+                self.conCurNotes = Label(text= ("Streak: " + str(self.player1.concurrentNotes)), font_size=50)
                 self.timingHelp = Label(text= ("|"), font_size=20)
                 self.performanceMeter = Label(text=("|"), font_size=20)
                 
@@ -793,7 +812,7 @@ class RandomMode(MusicGame):
         self.barGenerator.nextBarPositions, self.barGenerator.nextBarNoteTypes = self.barGenerator.calculate_bars_random(self.barGenerator.time)
 
         #Return how many bars the song contains
-        self.gameManager.maxBars = 8
+        self.gameManager.maxBars = 10
         self.gameManager.totalNotes = len(self.barGenerator.beatPositions)
         self.draw_notes()
 
