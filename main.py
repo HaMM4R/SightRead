@@ -556,7 +556,6 @@ class MusicGame(Widget):
             self.performanceMeter.center_x = self.performanceStartX + ((float(self.player1.curSuccess) / 100) * self.performanceSizeX)
             self.draw_labels()
             #self.animate_timing_icon(dt)
-            print(Clock.get_rfps())
 
     def bar_updated(self):
         self.draw_background()
@@ -627,17 +626,13 @@ class MusicGame(Widget):
     
     def draw_labels(self):
         self.score.text= ("Score: " + str(self.player1.curScore))
-        self.multiplier.text= ("Multiplier: " + str(self.player1.currentScoreMultipler) + "x")
+        self.multiplier.text= ("Multiplier: " + str(self.player1.currentScoreMultipler) + "x" + " fps" + str(Clock.get_rfps()))
         self.conCurNotes.text= ("Steak: " + str(self.player1.concurrentNotes))
         
     #Split into draw class            
 
     def draw_notes(self):
         distBetween = self.barOneSizeY / 5
-        print("BAR POSITION:", self.barGenerator.curBarPositions)
-        print("BAR POSITION COUNT:", len(self.barGenerator.curBarPositions))
-        print("NOTETYPESL: ", self.barGenerator.curBarNoteTypes)
-        print("NOTETYPESCpimt: ", len(self.barGenerator.curBarNoteTypes))
         #Current Bar
         for i in range(len(self.barGenerator.curBarPositions)):
             #This offset for loaded in bars
