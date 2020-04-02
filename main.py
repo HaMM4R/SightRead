@@ -550,11 +550,13 @@ class MusicGame(Widget):
                 self.passedSong = False                                     
                 self.end_game()                                                 
 
-            self.timingHelp.center_x = float(self.timingHelp.center_x) + (float(self.barOneSizeX) / float(self.barGenerator.time) / Clock.get_rfps())
+            #THIS IS CAUSING THE BAD FRAMERATE I BELIEVE
+            #self.timingHelp.center_x = float(self.timingHelp.center_x) + (float(self.barOneSizeX) / float(self.barGenerator.time) / Clock.get_rfps())
             
             self.performanceMeter.center_x = self.performanceStartX + ((float(self.player1.curSuccess) / 100) * self.performanceSizeX)
             self.draw_labels()
-            self.animate_timing_icon(dt)
+            #self.animate_timing_icon(dt)
+            print(Clock.get_rfps())
 
     def bar_updated(self):
         self.draw_background()
