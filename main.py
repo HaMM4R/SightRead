@@ -562,10 +562,19 @@ class MusicGame(Widget):
         del self.notesHitInBar[:]
         self.curBar += 1 
         self.gameEnded = self.gameManager.check_for_end(self.curBar)
+        with self.canvas:
+            timingIconTest = Rectangle(pos=(self.barOneStartX, self.barOneStartY + 50), size=(2, 20))
+            self.timing_icon_animate(timingIconTest)
+
         if(self.gameEnded == True):
             self.passedSong = True
             self.end_game()
-    
+
+    def timing_icon_animate(self, timingIcon):
+        #anim = Animation(pos = (posX, (self.barOneStartY - self.barOneSizeY)), size = (2,self.barOneSizeY - (self.barOneSizeY / 5)), duration = 0.1)
+        anim = Animation(pos = (self.barOneStartX + self.barOneSizeX, self.barOneStartY + 50), duration = self.barGenerator.time)
+        anim.start(timingIcon)
+
     def load_song_android(self):
         print("loading song")
         songsDIR = str(self.manager.musicDIR)
