@@ -91,7 +91,7 @@ class GameScreen(Screen):
         else:
             self.game = RandomMode()
 
-        self.game.start_game(self.manager)
+        self.game.setup_game(self.manager)
         self.add_widget(self.game)
         Clock.schedule_interval(self.game.update, 1.0 / 60.0)
 
@@ -422,6 +422,7 @@ class MusicGame(Widget):
     
     #gameEnding
     gameEnded = False
+    gameStarted = False
 
     performanceMeter = None
     
@@ -454,23 +455,41 @@ class MusicGame(Widget):
 
     bpm = 0
 
+    gameStartOffset = 0
+    gameStartTimer = barGenerator.meter
+    desktopAudio = None
 
-    def start_game(self, screenManager):
+    def setup_game(self, screenManager):
         self.manager = screenManager
         self.songName = self.manager.songName
         self.gameMode = self.manager.mode
         self.gameEnded = False
         self.calculate_boundaries()
-        self.draw_background()
         self.load_beats()
         if(platform == 'android'):
             self.load_song_android()
         else:
             self.load_song_desktop()
-
         self.barGenerator.gameType = self.gameMode
         self.barGenerator.calc_bar_time(self.bpm)
+
+    def prepare_game(self, dt):
+        self.gameStartTimer -= dt
+        with self.canvas:
+            Label(text=str(int(self.gameStartTimer)), font_size = 50, pos = (50,50))
+
+        if(self.gameStartTimer <= 0):
+            self.gameStartOffset -= dt
+            self.start_game()
+            self.gameStarted = True
+
+    def start_game(self):
+        self.draw_background()
         self.bar_setup_type()
+        if(platform == 'android'):
+            self.play_audio_android()
+        else:
+            self.play_audio_desktop()
 
     def calculate_boundaries(self):
         self.performanceStartX = (Window.width/4 + Window.width / 16)
@@ -537,7 +556,11 @@ class MusicGame(Widget):
          
     #Kivy function called by clock      
     def update(self, dt):
-        if(self.gameEnded == False):
+
+        if(self.gameStarted == False):
+            self.prepare_game(dt)
+
+        if(self.gameEnded == False and self.gameStarted == True):
             if(self.barGenerator.bar_setup(dt)):
                 self.bar_updated()
             
@@ -562,9 +585,6 @@ class MusicGame(Widget):
         del self.notesHitInBar[:]
         self.curBar += 1 
         self.gameEnded = self.gameManager.check_for_end(self.curBar)
-        with self.canvas:
-            timingIconTest = Rectangle(pos=(self.barOneStartX, self.barOneStartY + 50), size=(2, 20))
-            self.timing_icon_animate(timingIconTest)
 
         if(self.gameEnded == True):
             self.passedSong = True
@@ -587,31 +607,18 @@ class MusicGame(Widget):
         self.mPlayer.setDataSource(songsDIR + '/' + self.songName)
         self.mPlayer.setAudioStreamType(AudioManager.STREAM_NOTIFICATION)
         self.mPlayer.prepare()
-        self.mPlayer.start()
+        #self.mPlayer.start()
 
     def load_song_desktop(self):
         songDIR = (self.manager.musicDIR + '/' + str(self.songName))
-        sound = SoundLoader.load(songDIR)
-        sound.play()
-
+        self.desktopAudio = SoundLoader.load(songDIR)
         
-     #FIND A WAY TO COMPRESS THIS INTO ONE LINE THAT SUPPORTS MULTIPLE TIME SIGS
-    #PURELY FOR TESTING  
-    #Maybe use kivy animation?    
-    #Use modulus function in loop with iterations defined by time sig?
-    def animate_timing_icon(self, dt):
-        if (self.barGenerator.clock < (self.barGenerator.lastBarTime + self.barGenerator.time / 4) + 0.1) and (self.barGenerator.clock > (self.barGenerator.lastBarTime + self.barGenerator.time / 4) - 0.1):
-            if(self.timingHelp.font_size <= 25):
-                self.timingHelp.font_size += 5
-        elif (self.barGenerator.clock < (self.barGenerator.lastBarTime + self.barGenerator.time / 2) + 0.1) and (self.barGenerator.clock > (self.barGenerator.lastBarTime + self.barGenerator.time / 2) - 0.1):
-            if(self.timingHelp.font_size <= 25):
-                self.timingHelp.font_size += 5
-        elif (self.barGenerator.clock < (self.barGenerator.lastBarTime + self.barGenerator.time * 0.75) + 0.1) and (self.barGenerator.clock > (self.barGenerator.lastBarTime + self.barGenerator.time * 0.75) - 0.1):
-            if(self.timingHelp.font_size <= 25):
-                self.timingHelp.font_size += 5
-        else:
-            if(self.timingHelp.font_size > 20):
-                self.timingHelp.font_size -= 2
+
+    def play_audio_android(self):
+        self.mPlayer.start()   
+
+    def play_audio_desktop(self):
+        self.desktopAudio.play()
                 
     #Split into draw class
     def draw_background(self):
@@ -623,6 +630,8 @@ class MusicGame(Widget):
         self.draw_notes()
         self.assign_labels()
         with self.canvas:
+            timingIconTest = Rectangle(pos=(self.barOneStartX, self.barOneStartY + 50), size=(2, 20))
+            self.timing_icon_animate(timingIconTest)
             distBetween = self.barOneSizeY / 5
 
             for i in range(1,6):  
