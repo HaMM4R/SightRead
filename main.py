@@ -112,16 +112,16 @@ class NoteType(Enum):
     quarterNote = 4
     eigthNote = 8
     sixteethNote = 16
-    fullNoteRest = "1r"
-    halfNoteRest = "2r"
-    quarterNoteRest = "4r"
-    eigthNoteRest = "8r"
-    sixteethNoteRest = "16r"
     fullNoteTriplet = "1t"
     halfNoteTriplet  = "2t"
     quarterNoteTriplet  = "4t"
     eigthNoteTriplet  = "8t"
     sixteethNoteTriplet  = "16t"
+    fullNoteRest = "1r"
+    halfNoteRest = "2r"
+    quarterNoteRest = "4r"
+    eigthNoteRest = "8r"
+    sixteethNoteRest = "16r"
     
 
 class MissType(Enum):
@@ -297,14 +297,20 @@ class Bars:
     def miss_beat(self, notesHit):
         for i in range(self.beatsPassed, len(self.curBarPositions)):
             #Used for generated random bars
-            accNum = self.lastBarTime + (self.time * self.curBarPositions[i])
             
             if (self.clock > (self.curBarPositions[i] + self.lastBarTime) + 0.1):
                 self.beatsPassed += 1
                 if(i not in notesHit):
-                    return True
+                    if(self.check_if_rest(self.curBarNoteTypes[i]) == False):
+                        return True
+                    else:
+                        return False
         return False
         
+    def check_if_rest(self, note):
+        if(note == NoteType.fullNoteRest or note == NoteType.halfNoteRest or note == NoteType.quarterNoteRest or note == NoteType.eigthNoteRest or note == NoteType.sixteethNoteRest):
+            return True
+        return False
         
     #Clears out attributes ready to start again
     def end_game(self):
@@ -333,7 +339,7 @@ class Player(Widget):
     curSuccess = initSuccessMeter
     
     #is called when player touches screen to see if correctly hit a note
-    def check_touch(self, barPositions, lastBarTime, time, clock):
+    def check_touch(self, barPositions, lastBarTime, time, clock, noteTypes):
         recordTimes = open("RecordTimes.txt", "a")
         recordTimes.write(str(clock) + "\n")
         hasHit = False
@@ -343,6 +349,8 @@ class Player(Widget):
             accNum = lastBarTime + (time * barPositions[i])
             #Replace barPos with acc num for random bars
             if (clock < (barPositions[i] + lastBarTime) + 0.1) and (clock > (barPositions[i] + lastBarTime) - 0.1):
+                if(self.check_if_rest(noteTypes[i]) == True):
+                    break
                 self.hit_note(True)
                 self.success_meter(MissType.sucessfulHit)
                 noteHit = i
@@ -372,6 +380,11 @@ class Player(Widget):
         else:
             self.currentScoreMultipler = self.baseScoreMultiplier
             self.concurrentNotes = 0
+    
+    def check_if_rest(self, note):
+        if(note == NoteType.fullNoteRest or note == NoteType.halfNoteRest or note == NoteType.quarterNoteRest or note == NoteType.eigthNoteRest or note == NoteType.sixteethNoteRest):
+            return True
+        return False
 
     def restart_game(self):
         self.curScore = 0
@@ -406,7 +419,7 @@ class MusicGame(Widget):
     barGenerator = Bars()
     gameManager = GameManager()
     player1 = ObjectProperty(None)
-    
+
     sound = None
     
     curBar = 0
@@ -533,7 +546,7 @@ class MusicGame(Widget):
     
     #Kivy touch event, try and cut down on parameters sent        
     def on_touch_down(self, touch):
-        succesfulHit, noteID = self.player1.check_touch(self.barGenerator.curBarPositions, self.barGenerator.lastBarTime, self.barGenerator.time, self.barGenerator.clock) 
+        succesfulHit, noteID = self.player1.check_touch(self.barGenerator.curBarPositions, self.barGenerator.lastBarTime, self.barGenerator.time, self.barGenerator.clock, self.barGenerator.curBarNoteTypes) 
         self.touch_feedback(succesfulHit)
         self.notesHitInBar.append(noteID)
         if(self.gameEnded == True):
