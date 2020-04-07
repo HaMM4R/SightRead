@@ -24,6 +24,7 @@ from kivy.uix.label import Label
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.button import Button
 from kivy.uix.scrollview import ScrollView
+from kivy.uix.checkbox import CheckBox
 import kivy.uix.button as kb
 from kivy.properties import (
     NumericProperty, ReferenceListProperty, ObjectProperty
@@ -62,7 +63,11 @@ class SongSelect(Screen):
 
     songButtons = []
 
+    difficulty = "Easy"
+    difficultyLabel = None
+
     def on_enter(self):
+        self.clear_widgets()
         #Check platform to get directory for music
         if(platform == 'android'):
             self.musicDIR = '/sdcard/Music'
@@ -71,6 +76,7 @@ class SongSelect(Screen):
             self.musicDIR = str(fileDIR) + "/Music"
         self.songs = os.listdir(self.musicDIR)
         self.numOfSongs = len(self.songs)
+        self.manager.difficulty = "Easy"
 
         btnDown = Button(text="Previous Songs")
         btnDown.size_hint = (None, None)
@@ -88,7 +94,64 @@ class SongSelect(Screen):
         btnUp.bind(on_press=self.moveSongsUp)
         self.add_widget(btnUp)
 
+        btnNoFail = Button(text="No Fail")
+        btnNoFail.size_hint = (None, None)
+        btnNoFail.size = (Window.width / 8, Window.height / 10)
+        btnNoFail.center_x = Window.width / 16
+        btnNoFail.center_y = Window.height / 2
+        btnNoFailCall = partial(self.set_difficulty, btnNoFail.text)
+        btnNoFail.bind(on_press=btnNoFailCall)
+        self.add_widget(btnNoFail)
+
+        btnEasy = Button(text="Easy")
+        btnEasy.size_hint = (None, None)
+        btnEasy.size = (Window.width / 8, Window.height / 10)
+        btnEasy.center_x = Window.width / 16 + Window.width / 8
+        btnEasy.center_y = Window.height / 2
+        btnEasyCall = partial(self.set_difficulty, btnEasy.text)
+        btnEasy.bind(on_press=btnEasyCall)
+        self.add_widget(btnEasy)
+
+        btnMedium = Button(text="Medium")
+        btnMedium.size_hint = (None, None)
+        btnMedium.size = (Window.width / 8, Window.height / 10)
+        btnMedium.center_x = Window.width / 16 + (Window.width / 8 * 2)
+        btnMedium.center_y = Window.height / 2
+        btnMidCall = partial(self.set_difficulty, btnMedium.text)
+        btnMedium.bind(on_press=btnMidCall)
+        self.add_widget(btnMedium)
+
+        btnHard = Button(text="Hard")
+        btnHard.size_hint = (None, None)
+        btnHard.size = (Window.width / 8, Window.height / 10)
+        btnHard.center_x = Window.width / 16 + (Window.width / 8 * 3)
+        btnHard.center_y = Window.height / 2
+        btnHardCall = partial(self.set_difficulty, btnHard.text)
+        btnHard.bind(on_press=btnHardCall)
+        self.add_widget(btnHard)
+
+        btnBack = Button(text="Back")
+        btnBack.size_hint = (None, None)
+        btnBack.size = (Window.width / 2, Window.height / 10)
+        btnBack.center_x = 0 + Window.width / 4
+        btnBack.center_y = Window.height / 2 - Window.height / 10
+        btnBack.bind(on_press=self.back)
+        self.add_widget(btnBack)
+
+        self.difficultyLabel = Label(text=("Difficulty: Easy"), font_size = 50)
+        self.difficultyLabel.center_x = 0 - Window.width / 6
+        self.difficultyLabel.center_y = Window.height / 4
+        self.add_widget(self.difficultyLabel)
+
         self.displaySongList()
+
+    def back(self, *args):
+        self.manager.current = "main"
+
+
+    def set_difficulty(self, *args):
+        self.manager.difficulty = args[0]
+        self.difficultyLabel.text = ("Difficulty: " + args[0])
         
     def moveSongsUp(self, *args):
         for button in self.songButtons:
@@ -127,8 +190,6 @@ class SongSelect(Screen):
         self.manager.transition.direction = "right"
 
     def displaySongList(self):
-        print(self.minSongList)
-        print(self.maxSongList)
         for i in range(self.minSongList, self.maxSongList):
             if(self.songs[i] != 'SidecarFiles'):
                 btn = Button(text=str(self.songs[i]))  
@@ -170,6 +231,7 @@ class GameScreen(Screen):
 class ScreenManager(ScreenManager):
     songName = ""
     mode = ""
+    difficulty = ""
         
 
 #calculate these values based on the time sig later
@@ -191,12 +253,6 @@ class NoteType(Enum):
     eigthNoteRest = "8r"
     sixteethNoteRest = "16r"
     
-
-class MissType(Enum):
-    missDecrease = 0#4
-    missClick = 0#6
-    sucessfulHit = -8
-
 class Bars:  
         
     beatPositions = []  #Holds beat times for entire song
@@ -225,32 +281,6 @@ class Bars:
     def calc_bar_time(self, BPM):
         bps = float(60/float(BPM))
         self.time = bps * self.meter 
-
-    #Creates a random bar for testing
-    def create_random(self):
-        totalBar = 0
-        bar = []
-
-        canContinue = 0 
-        
-        while totalBar <= 1:
-            beat = random.choice(list(NoteType))
-            
-            for x in list(NoteType):
-                if(x.value + totalBar <= 1):
-                    canContinue += 1
-            
-            if(canContinue > 0):
-                if(totalBar + beat.value > 1):
-                    continue
-                bar.append(beat)
-                totalBar += beat.value
-                canContinue = 0
-            else:
-                break
-                        
-        totalBar = 0
-        return bar
     
     #Checks to see when the next bar needs to be constructed
     def bar_setup(self, dt):
@@ -401,6 +431,10 @@ class Bars:
     
 class Player(Widget):
     
+    missDecrease = 0#4
+    missClick = 0#6
+    sucessfulHit = -8
+
     notesHitTotal = NumericProperty(0)
     curScore = NumericProperty(0)
   
@@ -419,7 +453,7 @@ class Player(Widget):
     curSuccess = initSuccessMeter
     
     #is called when player touches screen to see if correctly hit a note
-    def check_touch(self, barPositions, lastBarTime, time, clock, noteTypes):
+    def check_touch(self, barPositions, lastBarTime, time, clock, noteTypes, notesPlayed):
         recordTimes = open("RecordTimes.txt", "a")
         recordTimes.write(str(clock) + "\n")
         hasHit = False
@@ -430,17 +464,19 @@ class Player(Widget):
             #Replace barPos with acc num for random bars
             #if (clock > (barPositions[i] + lastBarTime) - 0.1) and (clock < (barPositions[i] + lastBarTime) + 0.1):
             if (clock > (barPositions[i]) - 0.12) and (clock < (barPositions[i]) + 0.12):
+                if(i in notesPlayed):
+                    break
                 if(self.check_if_rest(noteTypes[i]) == True):
                     break
                 self.hit_note(True)
-                self.success_meter(MissType.sucessfulHit)
+                self.success_meter(self.sucessfulHit)
                 noteHit = i
                 hasHit = True
                 break
             
         if(hasHit == False):    
             self.hit_note(False)
-            self.success_meter(MissType.missClick)
+            self.success_meter(self.missClick)
         #self.touch_feedback(hasHit)
         return hasHit, noteHit
     
@@ -476,7 +512,8 @@ class Player(Widget):
         
         
     def success_meter(self, missType):
-        self.curSuccess -= missType.value
+        print(missType)
+        self.curSuccess -= missType
         if(self.curSuccess > self.maxSuccessMeter):
             self.curSuccess = self.maxSuccessMeter
         
@@ -554,10 +591,14 @@ class MusicGame(Widget):
     gameStartTimer = barGenerator.meter
     desktopAudio = None
 
+    failLabel = None
+    epicLabel = None
+
     def setup_game(self, screenManager):
         self.manager = screenManager
         self.songName = self.manager.songName
         self.gameMode = self.manager.mode
+        self.set_difficulty_parameters()
         self.gameEnded = False
         self.calculate_boundaries()
         self.load_beats()
@@ -567,6 +608,24 @@ class MusicGame(Widget):
             self.load_song_desktop()
         self.barGenerator.gameType = self.gameMode
         self.barGenerator.calc_bar_time(self.bpm)
+
+    def set_difficulty_parameters(self):
+        if(self.manager.difficulty == "No Fail"):
+            self.player1.missDecrease = 0#4
+            self.player1.missClick = 0#6
+            self.player1.sucessfulHit = 0
+        elif(self.manager.difficulty == "Easy"):
+            self.player1.missDecrease = 3
+            self.player1.missClick = 6
+            self.player1.sucessfulHit = -12
+        elif(self.manager.difficulty == "Medium"):
+            self.player1.missDecrease = 6
+            self.player1.missClick = 8
+            self.player1.sucessfulHit = -12
+        else:
+            self.player1.missDecrease = 8
+            self.player1.missClick = 10
+            self.player1.sucessfulHit = -8
 
     def prepare_game(self, dt):
         self.gameStartTimer -= dt
@@ -628,10 +687,11 @@ class MusicGame(Widget):
     
     #Kivy touch event, try and cut down on parameters sent        
     def on_touch_down(self, touch):
-        succesfulHit, noteID = self.player1.check_touch(self.barGenerator.curBarPositions, self.barGenerator.lastBarTime, self.barGenerator.time, self.barGenerator.barClock, self.barGenerator.curBarNoteTypes) 
+        succesfulHit, noteID = self.player1.check_touch(self.barGenerator.curBarPositions, self.barGenerator.lastBarTime, self.barGenerator.time, self.barGenerator.barClock, self.barGenerator.curBarNoteTypes, self.notesHitInBar) 
         #self.touch_feedback(succesfulHit)
         if(succesfulHit):
             self.note_hit_animation(noteID)
+        print(self.notesHitInBar)
         self.notesHitInBar.append(noteID)
         if(self.gameEnded == True):
             self.restart_game()
@@ -667,7 +727,7 @@ class MusicGame(Widget):
             
             if(self.barGenerator.miss_beat(self.notesHitInBar)):                        
                 self.player1.hit_note(False)
-                self.player1.success_meter(MissType.missDecrease)                                                    
+                self.player1.success_meter(self.player1.missDecrease)                                                    
 
             if(self.player1.curSuccess <= 0):                               
                 self.gameEnded = True                                       
@@ -740,6 +800,15 @@ class MusicGame(Widget):
    
             Rectangle(pos=(self.performanceStartX, self.performanceStartY), size = (self.performanceSizeX, self.performanceSizeY))
             Rectangle(pos=(0, Window.height - 105), size=(Window.width, 1))
+
+            self.failLabel = Label(text="FAIL", font_size = 50)
+            self.failLabel.pos=(self.performanceStartX - 100, self.performanceStartY - 50)
+            self.add_widget(self.failLabel)
+
+            self.epicLabel = Label(text="EPIC", font_size = 50)
+            self.epicLabel.pos=(self.performanceStartX + self.performanceSizeX + 20, self.performanceStartY - 50)
+            self.add_widget(self.epicLabel)
+
             Color(1,1,1,0.5)
             Ellipse(pos=(self.width / 2 - 35, self.height / 2 - 35 - self.distanceBetweenStaffLines), size=(70,70))
             Color(1,1,1,1)
@@ -929,7 +998,8 @@ class MusicGame(Widget):
     
     def draw_final_screen(self):
         self.canvas.clear()
-        Window.clearcolor = (0, 0.5, 0.5, 1)
+        self.remove_widget(self.failLabel)
+        self.remove_widget(self.epicLabel)
         results = False
         previousResults = []
 
