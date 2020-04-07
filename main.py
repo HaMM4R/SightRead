@@ -418,7 +418,7 @@ class Bars:
         for i in range(self.beatsPassed, len(self.curBarPositions)):
             #Used for generated random bars
             
-            if (self.clock > (self.curBarPositions[i] + self.lastBarTime) + 0.1):
+            if (self.clock > (self.curBarPositions[i] + self.lastBarTime) + 0.4):
                 self.beatsPassed += 1
                 if(i not in notesHit):
                     if(self.check_if_rest(self.curBarNoteTypes[i]) == False):
@@ -471,7 +471,7 @@ class Player(Widget):
             #accNum = lastBarTime + (time * barPositions[i])
             #Replace barPos with acc num for random bars
             #if (clock > (barPositions[i] + lastBarTime) - 0.1) and (clock < (barPositions[i] + lastBarTime) + 0.1):
-            if (clock > (barPositions[i]) - 0.12) and (clock < (barPositions[i]) + 0.12):
+            if (clock > (barPositions[i]) - 0.04) and (clock < (barPositions[i]) + 0.28):
                 if(i in notesPlayed):
                     break
                 if(self.check_if_rest(noteTypes[i]) == True):
@@ -881,25 +881,25 @@ class MusicGame(Widget):
                     fullRest = Image(source = "Assets/Rest semibreve.png", keep_ratio = False, allow_stretch = True)
                     self.add_widget(fullRest)
                     self.notesAdded.append(fullRest)
-                    fullRest.pos = (self.width / 2 - (fullRest.width / 4), (self.barOneStartY - (distBetween * 2) - (distBetween / 2)))
+                    fullRest.pos = (self.width / 2 , (self.barOneStartY - (distBetween * 2) - (distBetween / 2)))
                     fullRest.size = (50, distBetween / 2)
                 elif(self.barGenerator.curBarNoteTypes[i] == NoteType.halfNoteRest):
                     halfRest = Image(source = "Assets/Rest minim.png", keep_ratio = False, allow_stretch = True)
                     self.add_widget(halfRest)
                     self.notesAdded.append(halfRest)
-                    halfRest.pos = (draw - (halfRest.width / 4), (self.barOneStartY - (distBetween * 3)))
+                    halfRest.pos = (draw , (self.barOneStartY - (distBetween * 3)))
                     halfRest.size = (50,  distBetween / 2)
                 elif(self.barGenerator.curBarNoteTypes[i] == NoteType.quarterNoteRest):
                     quarterRest = Image(source = "Assets/Rest crotchet.png", keep_ratio = False, allow_stretch = True)
                     self.add_widget(quarterRest)
                     self.notesAdded.append(quarterRest)
                     quarterRest.size = (50, distBetween * 3)
-                    quarterRest.pos = (draw - (quarterRest.width / 4), (self.barOneStartY- self.barOneSizeY) + distBetween)
+                    quarterRest.pos = (draw , (self.barOneStartY- self.barOneSizeY) + distBetween)
                 elif(self.barGenerator.curBarNoteTypes[i] == NoteType.eigthNoteRest):
                     eighthRest = Image(source = "Assets/Rest quaver.png", keep_ratio = False, allow_stretch = True)
                     self.add_widget(eighthRest)
                     self.notesAdded.append(eighthRest)
-                    eighthRest.pos = (draw - (eighthRest.width / 4), (self.barOneStartY- self.barOneSizeY) + distBetween)
+                    eighthRest.pos = (draw , (self.barOneStartY- self.barOneSizeY) + distBetween)
                     eighthRest.size = (50, distBetween * 2)
                 elif(self.barGenerator.curBarNoteTypes[i] == NoteType.sixteethNoteRest):
                     sixteenthRest = Image(source = "Assets/Rest semiquaver.png", keep_ratio = False, allow_stretch = True)
@@ -911,31 +911,31 @@ class MusicGame(Widget):
                     full = Image(source = "Assets/Semibreve.png", keep_ratio = False, allow_stretch = True)
                     self.add_widget(full)
                     self.notesAdded.append(full)
-                    full.pos = (draw - full.width / 4, self.barOneStartY- self.barOneSizeY)
+                    full.pos = (draw , self.barOneStartY- self.barOneSizeY)
                     full.size = (50, self.barOneSizeY - distBetween)
                 elif(self.barGenerator.curBarNoteTypes[i] == NoteType.halfNote or self.barGenerator.curBarNoteTypes[i] == NoteType.halfNoteTriplet):
                     half = Image(source = "Assets/Minim.png", keep_ratio = False, allow_stretch = True)
                     self.add_widget(half)
                     self.notesAdded.append(half)
-                    half.pos = (draw - half.width / 4, self.barOneStartY- self.barOneSizeY)
+                    half.pos = (draw , self.barOneStartY- self.barOneSizeY)
                     half.size = (50, self.barOneSizeY - distBetween)
                 elif(self.barGenerator.curBarNoteTypes[i] == NoteType.quarterNote or self.barGenerator.curBarNoteTypes[i] == NoteType.quarterNoteTriplet):
                     quarter = Image(source = "Assets/Crotchet.png", keep_ratio = False, allow_stretch = True)
                     self.add_widget(quarter)
                     self.notesAdded.append(quarter)
-                    quarter.pos = (draw - quarter.width / 4, self.barOneStartY- self.barOneSizeY)
+                    quarter.pos = (draw , self.barOneStartY- self.barOneSizeY)
                     quarter.size = (50, self.barOneSizeY - distBetween)
                 elif(self.barGenerator.curBarNoteTypes[i] == NoteType.eigthNote or self.barGenerator.curBarNoteTypes[i] == NoteType.eigthNoteTriplet):
                     eighth = Image(source = "Assets/Quaver single.png", keep_ratio = False, allow_stretch = True)
                     self.add_widget(eighth)
                     self.notesAdded.append(eighth)
-                    eighth.pos = (draw - eighth.width / 4, self.barOneStartY- self.barOneSizeY)
+                    eighth.pos = (draw, self.barOneStartY- self.barOneSizeY)
                     eighth.size = (50, self.barOneSizeY - distBetween)
                 elif(self.barGenerator.curBarNoteTypes[i] == NoteType.sixteethNote or self.barGenerator.curBarNoteTypes[i] == NoteType.sixteenthNoteTriplet):
                     sixteenth = Image(source = "Assets/Semiquaver.png", keep_ratio = False, allow_stretch = True)
                     self.add_widget(sixteenth)
                     self.notesAdded.append(sixteenth)
-                    sixteenth.pos = (draw - sixteenth.width / 4, self.barOneStartY- self.barOneSizeY)
+                    sixteenth.pos = (draw, self.barOneStartY- self.barOneSizeY)
                     sixteenth.size = (50, self.barOneSizeY - distBetween)
                 else:
                     Rectangle(pos=(draw, self.barOneStartY- self.barOneSizeY), size=(2, self.barOneSizeY - distBetween))
@@ -968,52 +968,52 @@ class MusicGame(Widget):
                 if(self.barGenerator.nextBarNoteTypes[i] == NoteType.fullNoteRest):
                     fullRest = Image(source = "Assets/Rest semibreve.png", keep_ratio = False, allow_stretch = True)
                     self.add_widget(fullRest)
-                    fullRest.pos = (self.width / 2 - (fullRest.width / 4), (self.barTwoStartY - (distBetween * 2) - (distBetween / 2)) - self.barTwoPosOffset)
+                    fullRest.pos = (self.width / 2 , (self.barTwoStartY - (distBetween * 2) - (distBetween / 2)) - self.barTwoPosOffset)
                     fullRest.size = (50, distBetween / 2)
                 elif(self.barGenerator.nextBarNoteTypes[i] == NoteType.halfNoteRest):
                     halfRest = Image(source = "Assets/Rest minim.png", keep_ratio = False, allow_stretch = True)
                     self.add_widget(halfRest)
-                    halfRest.pos = (draw - (halfRest.width / 4), self.barTwoStartY - (distBetween * 3) - self.barTwoPosOffset)
+                    halfRest.pos = (draw , self.barTwoStartY - (distBetween * 3) - self.barTwoPosOffset)
                     halfRest.size = (50,  distBetween / 2)
                 elif(self.barGenerator.nextBarNoteTypes[i] == NoteType.quarterNoteRest):
                     quarterRest = Image(source = "Assets/Rest crotchet.png", keep_ratio = False, allow_stretch = True)
                     self.add_widget(quarterRest)
                     quarterRest.size = (50, distBetween * 3)
-                    quarterRest.pos = (draw - (quarterRest.width / 4), (self.barTwoStartY- self.barOneSizeY) + distBetween - self.barTwoPosOffset)
+                    quarterRest.pos = (draw , (self.barTwoStartY- self.barOneSizeY) + distBetween - self.barTwoPosOffset)
                 elif(self.barGenerator.nextBarNoteTypes[i] == NoteType.eigthNoteRest):
                     eighthRest = Image(source = "Assets/Rest quaver.png", keep_ratio = False, allow_stretch = True)
                     self.add_widget(eighthRest)
-                    eighthRest.pos = (draw - (eighthRest.width / 4), (self.barTwoStartY- self.barOneSizeY) + distBetween - self.barTwoPosOffset)
+                    eighthRest.pos = (draw , (self.barTwoStartY- self.barOneSizeY) + distBetween - self.barTwoPosOffset)
                     eighthRest.size = (50, distBetween * 2)
                 elif(self.barGenerator.nextBarNoteTypes[i] == NoteType.sixteethNoteRest):
                     sixteenthRest = Image(source = "Assets/Rest semiquaver.png", keep_ratio = False, allow_stretch = True)
                     self.add_widget(sixteenthRest)
-                    sixteenthRest.pos = (draw - sixteenthRest.width / 4, self.barTwoStartY- self.barOneSizeY - self.barTwoPosOffset)
+                    sixteenthRest.pos = (draw , self.barTwoStartY- self.barOneSizeY - self.barTwoPosOffset)
                     sixteenthRest.size = (50, self.barOneSizeY - (distBetween * 2))
                 elif(self.barGenerator.nextBarNoteTypes[i] == NoteType.fullNote or self.barGenerator.nextBarNoteTypes[i] == NoteType.fullNoteTriplet):
                     full = Image(source = "Assets/Semibreve.png", keep_ratio = False, allow_stretch = True)
                     self.add_widget(full)
-                    full.pos = (draw - full.width / 4, self.barTwoStartY- self.barOneSizeY - self.barTwoPosOffset)
+                    full.pos = (draw , self.barTwoStartY- self.barOneSizeY - self.barTwoPosOffset)
                     full.size = (50, self.barOneSizeY - distBetween)
                 elif(self.barGenerator.nextBarNoteTypes[i] == NoteType.halfNote or self.barGenerator.nextBarNoteTypes[i] == NoteType.halfNoteTriplet):
                     half = Image(source = "Assets/Minim.png", keep_ratio = False, allow_stretch = True)
                     self.add_widget(half)
-                    half.pos = (draw - half.width / 4, self.barTwoStartY- self.barOneSizeY - self.barTwoPosOffset)
+                    half.pos = (draw , self.barTwoStartY- self.barOneSizeY - self.barTwoPosOffset)
                     half.size = (50, self.barOneSizeY - distBetween)
                 elif(self.barGenerator.nextBarNoteTypes[i] == NoteType.quarterNote or self.barGenerator.nextBarNoteTypes[i] == NoteType.quarterNoteTriplet):
                     quarter = Image(source = "Assets/Crotchet.png", keep_ratio = False, allow_stretch = True)
                     self.add_widget(quarter)
-                    quarter.pos = (draw - quarter.width / 4, self.barTwoStartY -  self.barOneSizeY - self.barTwoPosOffset)
+                    quarter.pos = (draw , self.barTwoStartY -  self.barOneSizeY - self.barTwoPosOffset)
                     quarter.size = (50, self.barOneSizeY - distBetween)
                 elif(self.barGenerator.nextBarNoteTypes[i] == NoteType.eigthNote or self.barGenerator.nextBarNoteTypes[i] == NoteType.eigthNoteTriplet):
                     eighth = Image(source = "Assets/Quaver single.png", keep_ratio = False, allow_stretch = True)
                     self.add_widget(eighth)
-                    eighth.pos = (draw - eighth.width / 4, self.barTwoStartY- self.barOneSizeY- self.barTwoPosOffset)
+                    eighth.pos = (draw , self.barTwoStartY- self.barOneSizeY- self.barTwoPosOffset)
                     eighth.size = (50, self.barOneSizeY - distBetween)
                 elif(self.barGenerator.nextBarNoteTypes[i] == NoteType.sixteethNote or self.barGenerator.nextBarNoteTypes[i] == NoteType.sixteethNoteTriplet):
                     sixteenth = Image(source = "Assets/Semiquaver.png", keep_ratio = False, allow_stretch = True)
                     self.add_widget(sixteenth)
-                    sixteenth.pos = (draw - sixteenth.width / 4, self.barTwoStartY- self.barOneSizeY - self.barTwoPosOffset)
+                    sixteenth.pos = (draw , self.barTwoStartY- self.barOneSizeY - self.barTwoPosOffset)
                     sixteenth.size = (50, self.barOneSizeY - distBetween)
                 else:
                     Rectangle(pos=(draw, self.barOneStartY- self.barOneSizeY), size=(2, self.barOneSizeY - distBetween))
