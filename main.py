@@ -283,11 +283,13 @@ class Bars:
         self.time = bps * self.meter 
     
     #Checks to see when the next bar needs to be constructed
-    def bar_setup(self, dt):
+    def return_notes_in_bar(self):
+        return len(self.curBarPositions)
+
+    def bar_setup(self, dt, currentBar,maxBar):
         self.clock = self.clock + dt
         self.barClock += dt
         if(self.clock >= self.lastBarTime + self.time):
-            print(self.nextBarNoteTypes)
             self.lastBarTime += self.time
             self.barClock = 0
             
@@ -295,10 +297,11 @@ class Bars:
             del self.curBarNoteTypes[:]
 
             if(self.gameType == "SongPlay"):
-                self.curBarPositions = self.calculate_bars_song(self.lastBarTime)
+                self.curBarPositions, self.curBarNoteTypes = self.calculate_bars_song(self.lastBarTime)
                 
                 del self.nextBarPositions[:]
-                self.nextBarPositions = self.calculate_bars_song((self.lastBarTime + self.time))
+                del self.nextBarNoteTypes[:]
+                self.nextBarPositions, self.nextBarNoteTypes = self.calculate_bars_song((self.lastBarTime + self.time))
             else:
                 #self.curBarPositions, self.curBarNoteTypes = self.calculate_bars_random(self.lastBarTime)
                 for i in range(len(self.nextBarNoteTypes)):
@@ -307,8 +310,8 @@ class Bars:
                 
                 del self.nextBarPositions[:]
                 del self.nextBarNoteTypes[:]
-                self.nextBarPositions, self.nextBarNoteTypes = self.calculate_bars_random((self.lastBarTime + self.time))
-            print(self.curBarPositions)
+                if(currentBar < maxBar - 2):
+                    self.nextBarPositions, self.nextBarNoteTypes = self.calculate_bars_random((self.lastBarTime + self.time))
             #self.construct_bar()
             return True
         return False
@@ -317,12 +320,15 @@ class Bars:
     def calculate_bars_song(self, lastTime):
         self.beatsPassed = 0
         beatHolder = []
+        beatTypes = []
+        del beatTypes[:]
         del beatHolder[:]
         for i in range(len(self.beatPositions)):
             if self.beatPositions[i] <= (lastTime + self.time) and self.beatPositions[i] > lastTime:
                 #self.curBarPositions.append((self.beatPositions[i] - self.lastBarTime))
                 beatHolder.append((self.beatPositions[i] - lastTime))
-        return beatHolder
+                beatTypes.append(NoteType.quarterNote)
+        return beatHolder, beatTypes
     
     def calculate_bars_random(self, lastTime):
         self.beatsPassed = 0
@@ -390,8 +396,8 @@ class Bars:
         return beatHolder, beatTypes
 
 
-    def calculate_song_length(self):
-        return math.ceil(self.beatPositions[-1] / self.time)
+    def calculate_song_length(self, length):
+        return math.ceil(length / self.time)
 
     #Constructs a bar randomly and assigns it         
     def construct_bar(self):
@@ -454,8 +460,6 @@ class Player(Widget):
     
     #is called when player touches screen to see if correctly hit a note
     def check_touch(self, barPositions, lastBarTime, time, clock, noteTypes, notesPlayed):
-        recordTimes = open("RecordTimes.txt", "a")
-        recordTimes.write(str(clock) + "\n")
         hasHit = False
         noteHit = -1
         for i in range(len(barPositions)):
@@ -512,7 +516,6 @@ class Player(Widget):
         
         
     def success_meter(self, missType):
-        print(missType)
         self.curSuccess -= missType
         if(self.curSuccess > self.maxSuccessMeter):
             self.curSuccess = self.maxSuccessMeter
@@ -586,16 +589,24 @@ class MusicGame(Widget):
     gameMode = ""
 
     bpm = 0
+    songLength = 0
+    songStart = 0
 
     gameStartOffset = 0
-    gameStartTimer = barGenerator.meter
+    gameStartTimer = float(barGenerator.meter)
     desktopAudio = None
 
     failLabel = None
     epicLabel = None
 
+    gameReadyToStart = False
+    songStarted = False
+
+    gameStartLabel = None
+
     def setup_game(self, screenManager):
         self.manager = screenManager
+        print(self.gameStartTimer)
         self.songName = self.manager.songName
         self.gameMode = self.manager.mode
         self.set_difficulty_parameters()
@@ -606,8 +617,14 @@ class MusicGame(Widget):
             self.load_song_android()
         else:
             self.load_song_desktop()
+        self.gameStartTimer += float(self.songStart)
         self.barGenerator.gameType = self.gameMode
         self.barGenerator.calc_bar_time(self.bpm)
+        self.gameReadyToStart = True
+        self.gameStartLabel = Label(text="", font_size=60)
+        self.gameStartLabel.center_x = Window.width / 2
+        self.gameStartLabel.center_y = Window.height / 2
+        self.add_widget(self.gameStartLabel)
 
     def set_difficulty_parameters(self):
         if(self.manager.difficulty == "No Fail"):
@@ -629,21 +646,23 @@ class MusicGame(Widget):
 
     def prepare_game(self, dt):
         self.gameStartTimer -= dt
-        with self.canvas:
-            Label(text=str(int(self.gameStartTimer)), font_size = 50, pos = (50,50))
+        self.gameStartLabel.text = str(int(self.gameStartTimer))
+
+        if(self.gameStartTimer <= self.songStart and self.songStarted == False):
+            if(platform == 'android'):
+                self.play_audio_android()
+            else:
+                self.play_audio_desktop()
+            self.songStarted = True
 
         if(self.gameStartTimer <= 0):
-            self.gameStartOffset -= dt
             self.start_game()
             self.gameStarted = True
 
     def start_game(self):
         self.draw_background()
         self.bar_setup_type()
-        if(platform == 'android'):
-            self.play_audio_android()
-        else:
-            self.play_audio_desktop()
+        
 
     def calculate_boundaries(self):
         self.performanceStartX = (Window.width/4 + Window.width / 16)
@@ -670,9 +689,9 @@ class MusicGame(Widget):
     def end_game(self):
         if(platform == 'android'):
             self.mPlayer.release()
-        file = open("Timings.txt", "a")
+        file = open("Results.txt", "a")
         if file.mode == 'a':
-            file.writelines(("\n",str(self.player1.curScore)))
+            file.writelines(("\n",str((float(self.player1.notesHitTotal) / float(self.gameManager.totalNotes - 1)) * 100)))
             file.close()
         self.draw_final_screen()
     
@@ -691,7 +710,6 @@ class MusicGame(Widget):
         #self.touch_feedback(succesfulHit)
         if(succesfulHit):
             self.note_hit_animation(noteID)
-        print(self.notesHitInBar)
         self.notesHitInBar.append(noteID)
         if(self.gameEnded == True):
             self.restart_game()
@@ -718,11 +736,12 @@ class MusicGame(Widget):
     #Kivy function called by clock      
     def update(self, dt):
 
-        if(self.gameStarted == False):
+        if(self.gameStarted == False and self.gameReadyToStart == True):
             self.prepare_game(dt)
 
         if(self.gameEnded == False and self.gameStarted == True):
-            if(self.barGenerator.bar_setup(dt)):
+            if(self.barGenerator.bar_setup(dt, self.curBar, self.gameManager.maxBars)):
+                self.gameManager.totalNotes += self.barGenerator.return_notes_in_bar()
                 self.bar_updated()
             
             if(self.barGenerator.miss_beat(self.notesHitInBar)):                        
@@ -784,6 +803,8 @@ class MusicGame(Widget):
     #Split into draw class
     def draw_background(self):
         self.canvas.clear()
+        self.remove_widget(self.failLabel)
+        self.remove_widget(self.epicLabel)
         #Window.clearcolor = (0, 0.5, 0.5, 1)
         #backgroundImage = Image(source="Background.jpg")
         #backgroundImage.allow_stretch = False
@@ -801,17 +822,17 @@ class MusicGame(Widget):
             Rectangle(pos=(self.performanceStartX, self.performanceStartY), size = (self.performanceSizeX, self.performanceSizeY))
             Rectangle(pos=(0, Window.height - 105), size=(Window.width, 1))
 
-            self.failLabel = Label(text="FAIL", font_size = 50)
-            self.failLabel.pos=(self.performanceStartX - 100, self.performanceStartY - 50)
-            self.add_widget(self.failLabel)
-
-            self.epicLabel = Label(text="EPIC", font_size = 50)
-            self.epicLabel.pos=(self.performanceStartX + self.performanceSizeX + 20, self.performanceStartY - 50)
-            self.add_widget(self.epicLabel)
-
             Color(1,1,1,0.5)
             Ellipse(pos=(self.width / 2 - 35, self.height / 2 - 35 - self.distanceBetweenStaffLines), size=(70,70))
             Color(1,1,1,1)
+
+        self.failLabel = Label(text="FAIL", font_size = 50)
+        self.failLabel.pos=(self.performanceStartX - 100, self.performanceStartY - 50)
+        self.add_widget(self.failLabel)
+
+        self.epicLabel = Label(text="EPIC", font_size = 50)
+        self.epicLabel.pos=(self.performanceStartX + self.performanceSizeX + 20, self.performanceStartY - 50)
+        self.add_widget(self.epicLabel)
         
         self.assign_labels()    
     
@@ -848,6 +869,7 @@ class MusicGame(Widget):
 
     def draw_notes(self):
         distBetween = self.barOneSizeY / 5
+        tripletDetected = 0
         self.clear_notes()
         #Current Bar
         for i in range(len(self.barGenerator.curBarPositions)):
@@ -857,6 +879,18 @@ class MusicGame(Widget):
             #offset = (self.barGenerator.curBarPositions[i] * 100)
             draw = ((self.barOneSizeX) * offset) + self.barOneStartX
             if(len(self.barGenerator.curBarNoteTypes) > 0):
+                
+                if(self.barGenerator.curBarNoteTypes[i] == NoteType.fullNoteTriplet or self.barGenerator.curBarNoteTypes[i] == NoteType.halfNoteTriplet or self.barGenerator.curBarNoteTypes[i] == NoteType.quarterNoteTriplet or self.barGenerator.curBarNoteTypes[i] == NoteType.eigthNoteTriplet or self.barGenerator.curBarNoteTypes[i] == NoteType.sixteethNoteTriplet):
+                    tripletDetected += 1
+                    if(tripletDetected == 2):
+                        tripletLabel = Label(text="3", font_size = 30)
+                        tripletLabel.pos = (draw - 20, self.barOneStartY - 20)
+                        self.add_widget(tripletLabel)
+                    if(tripletDetected == 3):
+                        tripletDetected = 0
+
+
+
                 if(self.barGenerator.curBarNoteTypes[i] == NoteType.fullNoteRest):
                     fullRest = Image(source = "Assets/Rest semibreve.png", keep_ratio = False, allow_stretch = True)
                     self.add_widget(fullRest)
@@ -926,6 +960,7 @@ class MusicGame(Widget):
                         #Ellipse(pos=(draw - distBetween, self.barOneStartY - self.barOneSizeY), size=(distBetween, distBetween))
 
         #Next Bar
+        tripletDetected = 0
         for i in range(len(self.barGenerator.nextBarPositions)):
             #This offset for loaded in bars
             
@@ -934,6 +969,16 @@ class MusicGame(Widget):
             #offset = (self.barGenerator.curBarPositions[i] * 100)
             draw = ((self.barTwoSizeX) * offset) + self.barTwoStartX
             if(len(self.barGenerator.nextBarNoteTypes) > 0):
+                if(self.barGenerator.curBarNoteTypes[i] == NoteType.fullNoteTriplet or self.barGenerator.curBarNoteTypes[i] == NoteType.halfNoteTriplet or self.barGenerator.curBarNoteTypes[i] == NoteType.quarterNoteTriplet or self.barGenerator.curBarNoteTypes[i] == NoteType.eigthNoteTriplet or self.barGenerator.curBarNoteTypes[i] == NoteType.sixteethNoteTriplet):
+                    tripletDetected += 1
+                    if(tripletDetected == 2):
+                        tripletLabel = Label(text="3", font_size = 30)
+                        tripletLabel.pos = (draw - 20, self.barTwoStartY - self.barTwoPosOffset - 50)
+                        self.add_widget(tripletLabel)
+                    if(tripletDetected == 3):
+                        tripletDetected = 0
+
+
                 if(self.barGenerator.nextBarNoteTypes[i] == NoteType.fullNoteRest):
                     fullRest = Image(source = "Assets/Rest semibreve.png", keep_ratio = False, allow_stretch = True)
                     self.add_widget(fullRest)
@@ -1003,61 +1048,69 @@ class MusicGame(Widget):
         results = False
         previousResults = []
 
-        with self.canvas:
-                title = Label(text="Results", font_size = 60)
-                notes = Label(text= ("Total Notes Hit: " + str(self.player1.notesHitTotal) + "/" + str(self.gameManager.totalNotes - 1)), font_size=40)
-                scoreFInal = Label(text= ("Score: " + str(self.player1.curScore)), font_size=40)
-                maxNotes = Label(text= ("Max Streak: " + str(self.player1.maxConcurrentNotes)), font_size=40)
-            
-                if(self.passedSong):
-                    title.text = "Result: Pass"
-                else:
-                    title.text = "Result: Failed"
-            
-                title.center_x = Window.width / 2
-                title.center_y = Window.height / 2 + 60
-            
-                notes.center_x = Window.width / 2
-                notes.center_y = Window.height / 2 - 40
-                
-                scoreFInal.center_x = Window.width / 2
-                scoreFInal.center_y = Window.height / 2
+        title = Label(text="Results", font_size = 60)
+        notes = Label(text= ("Percentage: " + str((float(self.player1.notesHitTotal) / float(self.gameManager.totalNotes - 1)) * 100) + "%"), font_size=40)
+        scoreFInal = Label(text= ("Score: " + str(self.player1.curScore)), font_size=40)
+        maxNotes = Label(text= ("Max Streak: " + str(self.player1.maxConcurrentNotes)), font_size=40)
+    
+        if(self.passedSong):
+            title.text = "Result: Pass"
+        else:
+            title.text = "Result: Failed"
+    
+        title.center_x = Window.width / 2
+        title.center_y = Window.height / 2 + 60
+    
+        notes.center_x = Window.width / 2
+        notes.center_y = Window.height / 2 - 40
+        
+        scoreFInal.center_x = Window.width / 2
+        scoreFInal.center_y = Window.height / 2
 
-                maxNotes.center_x = Window.width / 2
-                maxNotes.center_y = Window.height / 2 - 80
+        maxNotes.center_x = Window.width / 2
+        maxNotes.center_y = Window.height / 2 - 80
 
-                #Read in and display results
-                file = open("Timings.txt", "r")
-                if file.mode == 'r':
-                    contents = file.read().splitlines()
-                    for i in contents:
-                        if(results == True):
-                            try:
-                                previousResults.append(int(i))
-                            except:
-                                print("not int")
+        self.add_widget(title)
+        self.add_widget(notes)
+        self.add_widget(scoreFInal)
+        self.add_widget(maxNotes)
 
-                        if(i == "Results"):
-                            results = True
+        #Read in and display results
+        file = open("Results.txt", "r")
+        if file.mode == 'r':
+            contents = file.read().splitlines()
+            for i in contents:
+                try:
+                    previousResults.append(i)
+                except:
+                    print("not int")
 
-                    file.close()
 
-                previousResults.sort()
-                previousResults.reverse()
+            file.close()
 
-                numOfPreviousResults = len(previousResults)
-                
-                #Print previous results
-                if(numOfPreviousResults >= 3):
-                    for i in range(0,3):
-                        note = Label(text= ("Leaderboard: " + str(i+1) + " " + str(previousResults[i])), font_size=20)
-                        note.center_x = Window.width / 2
-                        note.center_y = Window.height / 2 - 140 - (i * 20)
-                else:
-                    for i in range(numOfPreviousResults):
-                        note = Label(text= ("Leaderboard: " + str(i+1) + " " + str(previousResults[i])), font_size=20)
-                        note.center_x = Window.width / 2
-                        note.center_y = Window.height / 2 - 140 - (i * 20)
+        for num in previousResults:
+            try:
+                num = int(num)
+            except:
+                print("NotIn")
+        previousResults.sort()
+        previousResults.reverse()
+
+        numOfPreviousResults = len(previousResults)
+        
+        #Print previous results
+        if(numOfPreviousResults >= 3):
+            for i in range(0,3):
+                preScore = Label(text= ("High Score: " + str(i+1) + " " + str(previousResults[i])), font_size=40)
+                preScore.center_x = Window.width / 2
+                preScore.center_y = Window.height / 2 - 140 - (i * 40)
+                self.add_widget(preScore)
+        else:
+            for i in range(numOfPreviousResults):
+                preScore = Label(text= ("High Score: " + str(i+1) + " " + str(previousResults[i])), font_size=40)
+                preScore.center_x = Window.width / 2
+                preScore.center_y = Window.height / 2 - 140 - (i * 40)
+                self.add_widget(preScore)
 
                 
 #        restartButton = kb.Button(text="Restart")
@@ -1066,21 +1119,21 @@ class MusicGame(Widget):
 
 class SongMode(MusicGame):
     def bar_setup_type(self):
-        self.barGenerator.curBarPositions = self.barGenerator.calculate_bars_song(0)
-        self.barGenerator.nextBarPositions = self.barGenerator.calculate_bars_song(self.barGenerator.time)
+        self.barGenerator.curBarPositions, self.barGenerator.curBarNoteTypes = self.barGenerator.calculate_bars_song(0)
+        self.barGenerator.nextBarPositions, self.barGenerator.nextBarNoteTypes = self.barGenerator.calculate_bars_song(self.barGenerator.time)
 
         #Return how many bars the song contains
-        self.gameManager.maxBars = self.barGenerator.calculate_song_length()
-        self.gameManager.totalNotes = len(self.barGenerator.beatPositions)
+        self.gameManager.maxBars = self.barGenerator.calculate_song_length(self.songLength)
+        self.gameManager.totalNotes += self.barGenerator.return_notes_in_bar()
         self.draw_notes()
 
     def load_beats(self):
-        cleanpath = os.path.abspath(self.manager.musicDIR + "/SidecarFiles/" + self.songName + ".txt")
+        cleanpath = os.path.abspath(self.manager.musicDIR + "/SidecarFiles/" + self.songName + ".beats")
         file = open(cleanpath, 'r')
 
         contents = file.read().splitlines()
 
-        for i in range (len(contents)):
+        for i in range (2, len(contents)):
             try:
                 if(i != 0):
                     self.barGenerator.beatPositions.append(float(contents[i]))
@@ -1088,6 +1141,8 @@ class SongMode(MusicGame):
                 print("error")
 
         self.bpm = contents[0]
+        self.songLength = float(contents[1])
+        self.songStart = float(contents[2])
 
 class RandomMode(MusicGame):
 
@@ -1096,16 +1151,18 @@ class RandomMode(MusicGame):
         self.barGenerator.nextBarPositions, self.barGenerator.nextBarNoteTypes = self.barGenerator.calculate_bars_random(self.barGenerator.time)
 
         #Return how many bars the song contains
-        self.gameManager.maxBars = 16
-        self.gameManager.totalNotes = len(self.barGenerator.beatPositions)
+        self.gameManager.maxBars = self.barGenerator.calculate_song_length(self.songLength)
+        self.gameManager.totalNotes += self.barGenerator.return_notes_in_bar()
         self.draw_notes()
 
     def load_beats(self):
         #Get BPM for chosen song
-        cleanpath = os.path.abspath(self.manager.musicDIR + "/SidecarFiles/" + self.songName + ".txt")
+        cleanpath = os.path.abspath(self.manager.musicDIR + "/SidecarFiles/" + self.songName + ".beats")
         file = open(cleanpath, 'r')
         contents = file.read().splitlines()
         self.bpm = contents[0]  
+        self.songLength = float(contents[1])
+        self.songStart = float(contents[2])
 
         cleanpath = os.path.abspath(self.manager.musicDIR + "/SidecarFiles/" + "RandomBeats.txt")
         file = open(cleanpath, 'r')  

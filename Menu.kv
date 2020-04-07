@@ -31,23 +31,36 @@ ScreenManager:
 		height:30
 		spacing:10
 
-		Label: 
-			size_hint: (.7, 1)
-			text: "Sight Reading Game"	
-		GridLayout:
-			cols: 1
-			size_hint: (.3,1)
-			Button:
-				text: "Play Song"
-				on_release: 
-					app.root.current = "song"
-					root.manager.transition.direction = "left"
-                    root.manager.mode = "SongPlay"
-			Button:
-				text: "Practise Random Bars"
-				on_release: 
+        GridLayout:
+            cols: 1
+            Label: 
+                size_hint: (.7, 0.1)
+                text: "RhythmTrain"	
+                font_size: 50
+            Label: 
+                size_hint: (.7, 0.1)
+                text: "How to play"	
+                font_size: 40
+            Label: 
+                size_hint: (.7, 0.8)
+                font_size: 19
+                text: "Tap out the beats seen onscreen to your favourite music!\n The Practice Rhythms mode will throw up random bars of music (which can be customised by editing the RandomBeats text file on your device) for you to tap \n Own Charts gives users who want to spend time on creating their own rhythms to that line up to the music the chance to do so.\n Be careful though, if you miss to many notes you'll fail!"	
+        GridLayout:
+            cols: 1
+            size_hint: (.3,1)
+            Button:
+                size_hint: (1,0.7)
+                text: "Practice Rhythms"
+                on_release: 
                     app.root.current = "song"
                     root.manager.mode = "RandomPlay"
+            Button:
+                size_hint: (1,0.3)
+                text: "Own Charts (Not Recommended)"
+                on_release: 
+                    app.root.current = "song"
+                    root.manager.transition.direction = "left"
+                    root.manager.mode = "SongPlay"
 			
 
 <SongSelect>
