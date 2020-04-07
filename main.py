@@ -551,9 +551,6 @@ class MusicGame(Widget):
     multiplier = None
     conCurNotes = None
 
-    #TiminghelpLabel
-    timingHelp = None
-    
     #gameEnding
     gameEnded = False
     gameStarted = False
@@ -713,16 +710,7 @@ class MusicGame(Widget):
         self.notesHitInBar.append(noteID)
         if(self.gameEnded == True):
             self.restart_game()
-    
-    #Visual animation to see where hit
-    def touch_feedback(self, hasHit):
-        with self.canvas:
-                if(hasHit):
-                    Color(0.06,1,0.06,0.3)
-                else:
-                    Color(1,1,1,0.1)
-                visualHit = Rectangle(pos=(self.timingHelp.center_x, (self.barOneStartY - (self.barOneSizeY / 2))), size=(2, 0))
-        self.animate_touch_feedback(visualHit, self.timingHelp.center_x)    
+ 
     
     #Maybe change animation to fade? Still need to make notes pulse    
     def animate_touch_feedback(self, visual, posX):
@@ -753,8 +741,6 @@ class MusicGame(Widget):
                 self.passedSong = False                                     
                 self.end_game()                                                 
 
-            #THIS IS CAUSING THE BAD FRAMERATE I BELIEVE
-            #self.timingHelp.center_x = float(self.timingHelp.center_x) + (float(self.barOneSizeX) / float(self.barGenerator.time) / Clock.get_rfps())
             
             self.performanceMeter.center_x = self.performanceStartX + ((float(self.player1.curSuccess) / 100) * self.performanceSizeX)
             self.draw_labels()
@@ -816,8 +802,8 @@ class MusicGame(Widget):
             self.distanceBetweenStaffLines = self.barOneSizeY / 5
 
             for i in range(1,6):  
-                Rectangle(pos=(self.barOneStartX, self.barOneStartY - (i * self.distanceBetweenStaffLines)), size=(self.barOneSizeX, 2))
-                Rectangle(pos=(self.barTwoStartX, (self.barTwoStartY - (i * self.distanceBetweenStaffLines) - self.barTwoPosOffset)), size=(self.barTwoSizeX, 2))
+                Rectangle(pos=(self.barOneStartX - 50, self.barOneStartY - (i * self.distanceBetweenStaffLines)), size=(self.barOneSizeX + 100, 2))
+                Rectangle(pos=(self.barTwoStartX - 50, (self.barTwoStartY - (i * self.distanceBetweenStaffLines) - self.barTwoPosOffset)), size=(self.barTwoSizeX +100, 2))
    
             Rectangle(pos=(self.performanceStartX, self.performanceStartY), size = (self.performanceSizeX, self.performanceSizeY))
             Rectangle(pos=(0, Window.height - 105), size=(Window.width, 1))
@@ -837,7 +823,7 @@ class MusicGame(Widget):
         self.assign_labels()    
     
     def draw_labels(self):
-        self.score.text= ("Score: " + str(self.player1.curScore) + " fps" + str(Clock.get_rfps()))
+        self.score.text= ("Score: " + str(self.player1.curScore))
         self.multiplier.text= (str(self.player1.currentScoreMultipler) + "x")
         self.conCurNotes.text= ("Streak: " + str(self.player1.concurrentNotes))
 
@@ -846,10 +832,9 @@ class MusicGame(Widget):
                 self.score = Label(text= ("Score: " + str(self.player1.curScore)), font_size=50)
                 self.multiplier = Label(text= (str(self.player1.currentScoreMultipler)), font_size=50)
                 self.conCurNotes = Label(text= ("Streak: " + str(self.player1.concurrentNotes)), font_size=50)
-                self.timingHelp = Label(text= ("|"), font_size=20)
                 self.performanceMeter = Label(text=("|"), font_size=20)
                 
-                self.score.center_x = 150
+                self.score.center_x = 200
                 self.score.center_y = Window.height - 55
                 
                 self.multiplier.center_x = Window.width / 2
@@ -857,9 +842,6 @@ class MusicGame(Widget):
                 
                 self.conCurNotes.center_x = Window.width - 115
                 self.conCurNotes.center_y = Window.height - 55
-                
-                self.timingHelp.center_x = self.barOneStartX
-                self.timingHelp.center_y = self.barOneStartY
        
                 self.performanceMeter.pos = (20,20)  
         
@@ -895,13 +877,13 @@ class MusicGame(Widget):
                     fullRest = Image(source = "Assets/Rest semibreve.png", keep_ratio = False, allow_stretch = True)
                     self.add_widget(fullRest)
                     self.notesAdded.append(fullRest)
-                    fullRest.pos = (draw - (fullRest.width / 4), (self.barOneStartY - (distBetween * 2)))
+                    fullRest.pos = (self.width / 2 - (fullRest.width / 4), (self.barOneStartY - (distBetween * 2) - (distBetween / 2)))
                     fullRest.size = (50, distBetween / 2)
                 elif(self.barGenerator.curBarNoteTypes[i] == NoteType.halfNoteRest):
                     halfRest = Image(source = "Assets/Rest minim.png", keep_ratio = False, allow_stretch = True)
                     self.add_widget(halfRest)
                     self.notesAdded.append(halfRest)
-                    halfRest.pos = (draw - (halfRest.width / 4), self.barOneStartY- self.barOneSizeY)
+                    halfRest.pos = (draw - (halfRest.width / 4), (self.barOneStartY - (distBetween * 3)))
                     halfRest.size = (50,  distBetween / 2)
                 elif(self.barGenerator.curBarNoteTypes[i] == NoteType.quarterNoteRest):
                     quarterRest = Image(source = "Assets/Rest crotchet.png", keep_ratio = False, allow_stretch = True)
@@ -969,7 +951,7 @@ class MusicGame(Widget):
             #offset = (self.barGenerator.curBarPositions[i] * 100)
             draw = ((self.barTwoSizeX) * offset) + self.barTwoStartX
             if(len(self.barGenerator.nextBarNoteTypes) > 0):
-                if(self.barGenerator.curBarNoteTypes[i] == NoteType.fullNoteTriplet or self.barGenerator.curBarNoteTypes[i] == NoteType.halfNoteTriplet or self.barGenerator.curBarNoteTypes[i] == NoteType.quarterNoteTriplet or self.barGenerator.curBarNoteTypes[i] == NoteType.eigthNoteTriplet or self.barGenerator.curBarNoteTypes[i] == NoteType.sixteethNoteTriplet):
+                if(self.barGenerator.nextBarNoteTypes[i] == NoteType.fullNoteTriplet or self.barGenerator.nextBarNoteTypes[i] == NoteType.halfNoteTriplet or self.barGenerator.nextBarNoteTypes[i] == NoteType.quarterNoteTriplet or self.barGenerator.nextBarNoteTypes[i] == NoteType.eigthNoteTriplet or self.barGenerator.nextBarNoteTypes[i] == NoteType.sixteethNoteTriplet):
                     tripletDetected += 1
                     if(tripletDetected == 2):
                         tripletLabel = Label(text="3", font_size = 30)
@@ -982,12 +964,12 @@ class MusicGame(Widget):
                 if(self.barGenerator.nextBarNoteTypes[i] == NoteType.fullNoteRest):
                     fullRest = Image(source = "Assets/Rest semibreve.png", keep_ratio = False, allow_stretch = True)
                     self.add_widget(fullRest)
-                    fullRest.pos = (draw - (fullRest.width / 4), (self.barTwoStartY - (distBetween * 2)) - self.barTwoPosOffset)
+                    fullRest.pos = (self.width / 2 - (fullRest.width / 4), (self.barTwoStartY - (distBetween * 2) - (distBetween / 2)) - self.barTwoPosOffset)
                     fullRest.size = (50, distBetween / 2)
                 elif(self.barGenerator.nextBarNoteTypes[i] == NoteType.halfNoteRest):
                     halfRest = Image(source = "Assets/Rest minim.png", keep_ratio = False, allow_stretch = True)
                     self.add_widget(halfRest)
-                    halfRest.pos = (draw - (halfRest.width / 4), self.barTwoStartY- self.barOneSizeY - self.barTwoPosOffset)
+                    halfRest.pos = (draw - (halfRest.width / 4), self.barTwoStartY - (distBetween * 3) - self.barTwoPosOffset)
                     halfRest.size = (50,  distBetween / 2)
                 elif(self.barGenerator.nextBarNoteTypes[i] == NoteType.quarterNoteRest):
                     quarterRest = Image(source = "Assets/Rest crotchet.png", keep_ratio = False, allow_stretch = True)
