@@ -190,7 +190,11 @@ class SongSelect(Screen):
         self.manager.transition.direction = "right"
 
     def displaySongList(self):
+        if(self.maxSongList >= len(self.songs)):
+            self.maxSongList = len(self.songs)
+        print(self.maxSongList)
         for i in range(self.minSongList, self.maxSongList):
+            print(i)
             if(self.songs[i] != 'SidecarFiles'):
                 btn = Button(text=str(self.songs[i]))  
                 btn.size = (Window.width / 4, Window.height / 5)
