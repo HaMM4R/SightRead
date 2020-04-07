@@ -54,6 +54,14 @@ class MainMenu(Screen):
 
 class SongSelect(Screen):
     musicDIR = ''
+    numOfSongs = 0
+    minSongList = 0
+    maxSongList = 4
+    songs = None
+    lastChange = 0
+
+    songButtons = []
+
     def on_enter(self):
         #Check platform to get directory for music
         if(platform == 'android'):
@@ -61,24 +69,84 @@ class SongSelect(Screen):
         else:
             fileDIR = os.path.dirname(os.path.realpath('__file__'))
             self.musicDIR = str(fileDIR) + "/Music"
-        entries = os.listdir(self.musicDIR)
-        print(entries)
-        for i in range(len(entries)):
-            if(entries[i] != 'SidecarFiles'):
-                btn = Button(text=str(entries[i]))  
-                btn.size = (Window.width / 2, Window.height / 8)
-                btn.size_hint = (None, None)
-                btn.center_x = Window.width / 2
-                btn.center_y = (Window.height - (Window.height / 8 * i)) - Window.height / 8
-                buttoncallback = partial(self.switch_screen, btn.text)
-                btn.bind(on_press=buttoncallback)
-                self.add_widget(btn)
+        self.songs = os.listdir(self.musicDIR)
+        self.numOfSongs = len(self.songs)
+
+        btnDown = Button(text="Previous Songs")
+        btnDown.size_hint = (None, None)
+        btnDown.size = (Window.width / 4, Window.height / 10)
+        btnDown.center_x = Window.width - Window.width / 8
+        btnDown.center_y = Window.height - Window.height / 20
+        btnDown.bind(on_press=self.moveSongsDown)
+        self.add_widget(btnDown)
+
+        btnUp = Button(text="Next Songs")
+        btnUp.size_hint = (None, None)
+        btnUp.size = (Window.width / 4, Window.height / 10)
+        btnUp.center_x = Window.width - Window.width / 8
+        btnUp.center_y = 0 + Window.height / 20
+        btnUp.bind(on_press=self.moveSongsUp)
+        self.add_widget(btnUp)
+
+        self.displaySongList()
+        
+    def moveSongsUp(self, *args):
+        for button in self.songButtons:
+            self.remove_widget(button)
+
+        if(self.maxSongList + 4 <= len(self.songs)):
+            self.minSongList += 4
+            self.maxSongList += 4
+            self.lastChange = 4
+        else:
+            if(len(self.songs) != self.maxSongList):
+                self.lastChange = len(self.songs) - self.maxSongList
+            self.maxSongList = len(self.songs)
+            if(self.minSongList + 4 < self.maxSongList):
+                self.minSongList += 4
+
+        self.displaySongList()
+
+    def moveSongsDown(self, *args):
+        for button in self.songButtons:
+            self.remove_widget(button)
+
+        if(self.minSongList - 4 >= 0):
+            self.minSongList -= 4
+            self.maxSongList -= self.lastChange
+            self.lastChange = 4
+        else:
+            self.minSongList = 0
+
+        self.displaySongList()
     
     def switch_screen(self, *args):
         self.manager.current = "game"
         self.manager.musicDIR = self.musicDIR
         self.manager.songName = args[0]
         self.manager.transition.direction = "right"
+
+    def displaySongList(self):
+        print(self.minSongList)
+        print(self.maxSongList)
+        for i in range(self.minSongList, self.maxSongList):
+            if(self.songs[i] != 'SidecarFiles'):
+                btn = Button(text=str(self.songs[i]))  
+                btn.size = (Window.width / 4, Window.height / 5)
+                btn.size_hint = (None, None)
+                btn.center_x = Window.width - Window.width / 8
+                if(i == 0):
+                    btn.center_y = ((Window.height / 5 * i + Window.height / 5))
+                else:
+                    if(self.minSongList >= 4):
+                        btn.center_y = ((Window.height / 5 * (i - self.minSongList) + Window.height / 5))
+                    else:
+                        btn.center_y = ((Window.height / 5 * i))
+
+                buttoncallback = partial(self.switch_screen, btn.text)
+                btn.bind(on_press=buttoncallback)
+                self.songButtons.append(btn)
+                self.add_widget(btn)
 
 
 class GameScreen(Screen):
