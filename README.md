@@ -31,11 +31,8 @@ $ python3 main.py
 # INSTALLATION FOR ANDROID
 
 I have provided an APK in the release for those who would like to install on Android. You can download the APK directly to your phone 
-
 and install, or alternatively download on desktop and use your chosen file manager to install the APK. Once the APK is install YOU MUST 
-
 copy all of the contents from the music folder in this repository to your Android music folder, leaving the file structure intact as 
-
 demonstrated below:
 
 ```
@@ -53,27 +50,19 @@ Phone
 
 
 Or alternatively, for those who would like to compile their own APK, I have included a buildozer spec file and instructions on how to 
-
 use this can be seen here: https://kivy.org/doc/stable/guide/packaging-android.html
 
 
-
 The kivy launcher may also be used to run on android though is untested, first install the "Kivy Laucnher" from your "app store" or 
-
 direct from it's package for your phone type.
-
 e.g. for Android, via Google's Play Store:  https://play.google.com/store/apps/details?id=org.kivy.pygame&hl=en_US
-
 The Kivy launcher allows you to load different Kivy-based apps as data files rather than having to install them individually.
-
 (When this app is more stable we may package it as a standalone Android and other platform app to run without the Laucher.)
 
 # Song Setup
 
 Once installation is complete you can begin adding your own songs to the game. Firstly all songs you want to add must be in the root of 
-
 the music folder for the game to detect them. Secondly, a pairing beat file must be created with the same name as the mp3 you want it to 
-
 pair to. Some examples of these can be seen with the music provided. The structure of these files can be seen below:
 
 ```
@@ -93,11 +82,8 @@ Naming conventions for pairing song files is as follows:
 ```
 
 For those who would like to add random rhythms to the rotation you are able to do so by modifying RandomBeats.txt. There are currently 
-
 some limitations to the system. The system currently only supports up to 16th notes however the underlying code to support them is done, 
-
 just assets are needed so if you would like to make some contributions to the project please feel free. An example of some bars you 
-
 might add to the file can be seen below:
 
 ```
