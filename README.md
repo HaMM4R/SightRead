@@ -66,7 +66,7 @@ The Kivy launcher allows you to load different Kivy-based apps as data files rat
 
 Once installation is complete you can begin adding your own songs to the game. Firstly all songs you want to add must be in the root of 
 the music folder for the game to detect them. Secondly, a pairing beat file must be created with the same name as the mp3 you want it to 
-pair to and added into the SidecarFiles folder in the music folder on your device. Some examples of these can be seen with the music provided. The structure of these files can be seen below:
+pair to and added into the SidecarFiles folder in the music folder on your device. For the bars to be in time with the music, the tempo of the song must be consistent, if not you might find after a few bars the timing for the bars is off. Some examples of these can be seen with the music provided. The structure of these files can be seen below:
 
 ```
 120          <--- BPM
