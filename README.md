@@ -1,7 +1,7 @@
 # RhythmTrain
 
 This is an game app to help you learn to sight read rhythms in western art music notation.
-It will phone on Android devices, and also on Linux desktop. Windows will likely work also though is untested.
+It will run on Android devices, and also on Linux desktop. Windows will likely work also though is untested.
 It plays an mp3 of your choice and displays random bars of rhythms sync'd to the music.
 Users can also chart out where the beats lay in the music if they so wish though it is time consuming to chart and not recommended.
 You score points by tapping out the rhythms in time with the music, similar to games like Guitar hero.
@@ -83,8 +83,7 @@ Naming conventions for pairing song files is as follows:
 
 For those who would like to add random rhythms to the rotation you are able to do so by modifying RandomBeats.txt. There are currently 
 some limitations to the system. The system currently only supports up to 16th notes however the underlying code to support them is done, 
-just assets are needed so if you would like to make some contributions to the project please feel free. An example of some bars you 
-might add to the file can be seen below:
+just assets are needed so if you would like to make some contributions to the project please feel free. Be very careful with formatting as incorrect formatting may cause the app to crash. An example of some bars you might add to the file can be seen below:
 
 ```
 4 4 4 4       <----- A bar consisting of 4 quarter notes
