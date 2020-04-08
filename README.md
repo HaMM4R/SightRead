@@ -52,6 +52,7 @@ Phone
 Or alternatively, for those who would like to compile their own APK, I have included a buildozer spec file and instructions on how to 
 use this can be seen here: https://kivy.org/doc/stable/guide/packaging-android.html
 
+For compiling your own APK you will also need to install pyjnius: https://pyjnius.readthedocs.io/en/stable/
 
 The kivy launcher may also be used to run on android though is untested, first install the "Kivy Laucnher" from your "app store" or 
 direct from it's package for your phone type.
