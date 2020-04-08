@@ -1,10 +1,10 @@
 # RhythmTrain
 
-This is an game app to help you learn to sight read rhythms in western art music notation.
-It will run on Android devices, and also on Linux desktop. Windows will likely work also though is untested.
+This is an game to help you learn to sight read rhythms in western art music notation.
+It will run on Android devices, and also on Linux desktop. Windows will likely work also though it is untested.
 It plays an mp3 of your choice and displays random bars of rhythms sync'd to the music.
-Users can also chart out where the beats lay in the music if they so wish though it is time consuming to chart and not recommended.
-You score points by tapping out the rhythms in time with the music, similar to games like Guitar hero.
+Users can also chart out where the beats lay in the music if they so wish, though it is time consuming to chart and not recommended.
+You score points by tapping out the rhythms in time with the music, similar to games like Guitar Hero.
 But learning western art music notation as you go.
 
 The app is written using Python3 with the Kivy library, which provides a cross-platform (Android, iOS, Linux and more) graphics and touch API.
