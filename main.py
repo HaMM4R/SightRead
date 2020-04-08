@@ -194,24 +194,25 @@ class SongSelect(Screen):
             self.maxSongList = len(self.songs)
         print(self.maxSongList)
         for i in range(self.minSongList, self.maxSongList):
-            print(i)
-            if(self.songs[i] != 'SidecarFiles'):
-                btn = Button(text=str(self.songs[i]))  
-                btn.size = (Window.width / 4, Window.height / 5)
-                btn.size_hint = (None, None)
-                btn.center_x = Window.width - Window.width / 8
-                if(i == 0):
-                    btn.center_y = ((Window.height / 5 * i + Window.height / 5))
+            path = os.path.join(self.musicDIR, self.songs[i])
+            if(os.path.isdir(path)):
+                continue
+            btn = Button(text=str(self.songs[i]))  
+            btn.size = (Window.width / 4, Window.height / 5)
+            btn.size_hint = (None, None)
+            btn.center_x = Window.width - Window.width / 8
+            if(i == 0):
+                btn.center_y = ((Window.height / 5 * i + Window.height / 5))
+            else:
+                if(self.minSongList >= 4):
+                    btn.center_y = ((Window.height / 5 * (i - self.minSongList) + Window.height / 5))
                 else:
-                    if(self.minSongList >= 4):
-                        btn.center_y = ((Window.height / 5 * (i - self.minSongList) + Window.height / 5))
-                    else:
-                        btn.center_y = ((Window.height / 5 * i))
+                    btn.center_y = ((Window.height / 5 * i))
 
-                buttoncallback = partial(self.switch_screen, btn.text)
-                btn.bind(on_press=buttoncallback)
-                self.songButtons.append(btn)
-                self.add_widget(btn)
+            buttoncallback = partial(self.switch_screen, btn.text)
+            btn.bind(on_press=buttoncallback)
+            self.songButtons.append(btn)
+            self.add_widget(btn)
 
 
 class GameScreen(Screen):
