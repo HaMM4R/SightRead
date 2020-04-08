@@ -28,6 +28,8 @@ Then to run on Ubuntu, clone and do
 ```
 $ python3 main.py
 ```
+Your own music may then be added to the music folder for detection. For further instructions on this process please see the Song Setup section below. 
+
 # INSTALLATION FOR ANDROID
 
 I have provided an APK in the release for those who would like to install on Android. You can download the APK directly to your phone 
@@ -64,7 +66,7 @@ The Kivy launcher allows you to load different Kivy-based apps as data files rat
 
 Once installation is complete you can begin adding your own songs to the game. Firstly all songs you want to add must be in the root of 
 the music folder for the game to detect them. Secondly, a pairing beat file must be created with the same name as the mp3 you want it to 
-pair to. Some examples of these can be seen with the music provided. The structure of these files can be seen below:
+pair to and added into the SidecarFiles folder in the music folder on your device. Some examples of these can be seen with the music provided. The structure of these files can be seen below:
 
 ```
 120          <--- BPM
