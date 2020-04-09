@@ -1,5 +1,7 @@
 # RhythmTrain
 
+![Image of RhythmTrain](https://i.imgur.com/ob0upGM.png)
+
 This is an game to help you learn to sight read rhythms in western art music notation.
 It will run on Android devices, and also on Linux desktop. Windows will likely work also though it is untested.
 It plays an mp3 of your choice and displays random bars of rhythms sync'd to the music.
