@@ -78,6 +78,7 @@ class SongSelect(Screen):
         self.numOfSongs = len(self.songs)
         self.manager.difficulty = "Easy"
 
+        #Creates buttons for difficulties and changing songs in list
         btnDown = Button(text="Previous Songs")
         btnDown.size_hint = (None, None)
         btnDown.size = (Window.width / 4, Window.height / 10)
@@ -152,7 +153,8 @@ class SongSelect(Screen):
     def set_difficulty(self, *args):
         self.manager.difficulty = args[0]
         self.difficultyLabel.text = ("Difficulty: " + args[0])
-        
+
+    #Moves songs in the list up    
     def moveSongsUp(self, *args):
         for button in self.songButtons:
             self.remove_widget(button)
@@ -170,6 +172,7 @@ class SongSelect(Screen):
 
         self.displaySongList()
 
+    #Moves songs in the list down
     def moveSongsDown(self, *args):
         for button in self.songButtons:
             self.remove_widget(button)
@@ -189,6 +192,7 @@ class SongSelect(Screen):
         self.manager.songName = args[0]
         self.manager.transition.direction = "right"
 
+    #Displays the list of songs
     def displaySongList(self):
         if(self.maxSongList >= len(self.songs)):
             self.maxSongList = len(self.songs)
@@ -229,18 +233,13 @@ class GameScreen(Screen):
         self.add_widget(self.game)
         Clock.schedule_interval(self.game.update, 1.0 / 60.0)
 
-        #self.game.start_song()
-#    def call_hit(self, hasHit):
-#        self.game.hit_note(hasHit)
-
+#Is used to pass data between different screens
 class ScreenManager(ScreenManager):
     songName = ""
     mode = ""
     difficulty = ""
         
 
-#calculate these values based on the time sig later
-#trouble with python decimal addition is causing problems with smaller beats
 class NoteType(Enum):
     fullNote = 1
     halfNote = 2
@@ -271,10 +270,10 @@ class Bars:
 
     meter = 4
             
-    time = 0  #How long in seconds is a bar based on BPM and time sig
+    time = 0            #How long in seconds is a bar based on BPM and time sig
 
     clock = 0           #Overall game time
-    barClock = 0
+    barClock = 0        #Time within one bar, gets reset to 0 every time bar changes
     lastBarTime = 0     #What time in seconds did the last bar run until
     barNumber = 1
     
@@ -282,15 +281,16 @@ class Bars:
     
     missMargin = 0.1
 
-    
+    #Calculates how long a bar lasts
     def calc_bar_time(self, BPM):
         bps = float(60/float(BPM))
         self.time = bps * self.meter 
     
-    #Checks to see when the next bar needs to be constructed
+    #Returns how many notes in a bar
     def return_notes_in_bar(self):
         return len(self.curBarPositions)
 
+    #Checks when the next bar needs to be constructed
     def bar_setup(self, dt, currentBar,maxBar):
         self.clock = self.clock + dt
         self.barClock += dt
@@ -301,6 +301,7 @@ class Bars:
             del self.curBarPositions[:]
             del self.curBarNoteTypes[:]
 
+            #Constructs the bars differently depending on the mode as the random bar mode pulls in bars at random so must pull the previous bar to current bar
             if(self.gameType == "SongPlay"):
                 self.curBarPositions, self.curBarNoteTypes = self.calculate_bars_song(self.lastBarTime)
                 
@@ -308,7 +309,6 @@ class Bars:
                 del self.nextBarNoteTypes[:]
                 self.nextBarPositions, self.nextBarNoteTypes = self.calculate_bars_song((self.lastBarTime + self.time))
             else:
-                #self.curBarPositions, self.curBarNoteTypes = self.calculate_bars_random(self.lastBarTime)
                 for i in range(len(self.nextBarNoteTypes)):
                     self.curBarPositions.append(self.nextBarPositions[i])
                     self.curBarNoteTypes.append(self.nextBarNoteTypes[i])
@@ -317,7 +317,6 @@ class Bars:
                 del self.nextBarNoteTypes[:]
                 if(currentBar < maxBar - 2):
                     self.nextBarPositions, self.nextBarNoteTypes = self.calculate_bars_random((self.lastBarTime + self.time))
-            #self.construct_bar()
             return True
         return False
           
@@ -330,11 +329,11 @@ class Bars:
         del beatHolder[:]
         for i in range(len(self.beatPositions)):
             if self.beatPositions[i] <= (lastTime + self.time) and self.beatPositions[i] > lastTime:
-                #self.curBarPositions.append((self.beatPositions[i] - self.lastBarTime))
                 beatHolder.append((self.beatPositions[i] - lastTime))
                 beatTypes.append(NoteType.quarterNote)
         return beatHolder, beatTypes
     
+    #Calculates bars for RandomBeats.txt
     def calculate_bars_random(self, lastTime):
         self.beatsPassed = 0
         beatHolder = []
@@ -400,21 +399,11 @@ class Bars:
 
         return beatHolder, beatTypes
 
-
+    #Returns song length
     def calculate_song_length(self, length):
         return math.ceil(length / self.time)
 
-    #Constructs a bar randomly and assigns it         
-    def construct_bar(self):
-        self.beatsPassed = 0
-        del self.curBarPositions[:]
-        bar = self.create_random()
-        for x in range(len(bar)):
-            if (x == 0):
-                self.curBarPositions.append(bar[x].value)
-            else:
-                self.curBarPositions.append(bar[x].value + bar[x - 1].value)
-    
+    #Checks to see if the player has gone passed a beat and missed it  
     def miss_beat(self, notesHit):
         for i in range(self.beatsPassed, len(self.curBarPositions)):
             #Used for generated random bars
@@ -428,6 +417,7 @@ class Bars:
                         return False
         return False
         
+    #Checks if the note is a rest
     def check_if_rest(self, note):
         if(note == NoteType.fullNoteRest or note == NoteType.halfNoteRest or note == NoteType.quarterNoteRest or note == NoteType.eigthNoteRest or note == NoteType.sixteethNoteRest):
             return True
@@ -466,16 +456,15 @@ class Player(Widget):
     #is called when player touches screen to see if correctly hit a note
     def check_touch(self, barPositions, lastBarTime, time, clock, noteTypes, notesPlayed):
         hasHit = False
+        isRest = False
         noteHit = -1
         for i in range(len(barPositions)):
-            #Just used for random generated bars 
-            #accNum = lastBarTime + (time * barPositions[i])
-            #Replace barPos with acc num for random bars
-            #if (clock > (barPositions[i] + lastBarTime) - 0.1) and (clock < (barPositions[i] + lastBarTime) + 0.1):
             if (clock > (barPositions[i]) - 0.04) and (clock < (barPositions[i]) + 0.28):
                 if(i in notesPlayed):
                     break
                 if(self.check_if_rest(noteTypes[i]) == True):
+                    isRest = True
+                    noteHit = i
                     break
                 self.hit_note(True)
                 self.success_meter(self.sucessfulHit)
@@ -486,8 +475,7 @@ class Player(Widget):
         if(hasHit == False):    
             self.hit_note(False)
             self.success_meter(self.missClick)
-        #self.touch_feedback(hasHit)
-        return hasHit, noteHit
+        return hasHit, noteHit, isRest
     
     #Calculates score with multipliers 
     def hit_note(self, noteHit):
@@ -526,8 +514,6 @@ class Player(Widget):
             self.curSuccess = self.maxSuccessMeter
         
 
-#Will control the game state (WIP)
-#Will calculate performance metrics
 class GameManager:    
     maxBars = 0
     totalNotes = 0
@@ -606,6 +592,7 @@ class MusicGame(Widget):
 
     gameStartLabel = None
 
+    #Sets up the game and begins loading in audio and other files ready for when the game starts
     def setup_game(self, screenManager):
         self.manager = screenManager
         print(self.gameStartTimer)
@@ -628,6 +615,7 @@ class MusicGame(Widget):
         self.gameStartLabel.center_y = Window.height / 2
         self.add_widget(self.gameStartLabel)
 
+    #Sets the different values for different difficulties
     def set_difficulty_parameters(self):
         if(self.manager.difficulty == "No Fail"):
             self.player1.missDecrease = 0#4
@@ -646,6 +634,7 @@ class MusicGame(Widget):
             self.player1.missClick = 10
             self.player1.sucessfulHit = -8
 
+    #Has a timer to allow the audio to load before the game starts
     def prepare_game(self, dt):
         self.gameStartTimer -= dt
         self.gameStartLabel.text = str(int(self.gameStartTimer))
@@ -665,7 +654,7 @@ class MusicGame(Widget):
         self.draw_background()
         self.bar_setup_type()
         
-
+    #Calculates how long the staff and other screen elements need to be relative to the screen size
     def calculate_boundaries(self):
         self.performanceStartX = (Window.width/4 + Window.width / 16)
         self.performanceSizeX = (Window.width / 4 + (Window.width / 8))
@@ -702,28 +691,26 @@ class MusicGame(Widget):
         self.player1.restart_game()
         self.barGenerator.end_game()
         self.gameManager.restart_game()
-        #self.start_game(self.songName)
+
         self.manager.current = "song"
         self.manager.transition.direction = "right"
     
     #Kivy touch event, try and cut down on parameters sent        
     def on_touch_down(self, touch):
-        succesfulHit, noteID = self.player1.check_touch(self.barGenerator.curBarPositions, self.barGenerator.lastBarTime, self.barGenerator.time, self.barGenerator.barClock, self.barGenerator.curBarNoteTypes, self.notesHitInBar) 
-        #self.touch_feedback(succesfulHit)
-        if(succesfulHit):
-            self.note_hit_animation(noteID)
+        succesfulHit, noteID, isRest = self.player1.check_touch(self.barGenerator.curBarPositions, self.barGenerator.lastBarTime, self.barGenerator.time, self.barGenerator.barClock, self.barGenerator.curBarNoteTypes, self.notesHitInBar) 
+
+        if(succesfulHit or isRest):
+            self.note_hit_animation(noteID, isRest)
         self.notesHitInBar.append(noteID)
         if(self.gameEnded == True):
             self.restart_game()
  
-    
-    #Maybe change animation to fade? Still need to make notes pulse    
-    def animate_touch_feedback(self, visual, posX):
-        anim = Animation(pos = (posX, (self.barOneStartY - self.barOneSizeY)), size = (2,self.barOneSizeY - (self.barOneSizeY / 5)), duration = 0.1)
-        anim.start(visual)
 
-    def note_hit_animation(self, noteID):
-        anim = Animation(pos = (self.notesAdded[noteID].pos[0] - 12, self.notesAdded[noteID].pos[1] - 12), size = (74, self.notesAdded[noteID].height + 24), color = (1,0.82,0.26,1), duration =0.03)
+    def note_hit_animation(self, noteID, isRest):
+        if(isRest):
+            anim = Animation(pos = (self.notesAdded[noteID].pos[0] - 12, self.notesAdded[noteID].pos[1] - 12), size = (74, self.notesAdded[noteID].height + 24), color = (1,0.2,0.2,1), duration =0.03)
+        else:
+            anim = Animation(pos = (self.notesAdded[noteID].pos[0] - 12, self.notesAdded[noteID].pos[1] - 12), size = (74, self.notesAdded[noteID].height + 24), color = (1,0.82,0.26,1), duration =0.03)
         anim.start(self.notesAdded[noteID])
          
     #Kivy function called by clock      
@@ -733,6 +720,7 @@ class MusicGame(Widget):
             self.prepare_game(dt)
 
         if(self.gameEnded == False and self.gameStarted == True):
+            #Checks to see when the bar is being updated
             if(self.barGenerator.bar_setup(dt, self.curBar, self.gameManager.maxBars)):
                 self.gameManager.totalNotes += self.barGenerator.return_notes_in_bar()
                 self.bar_updated()
@@ -761,8 +749,8 @@ class MusicGame(Widget):
             self.passedSong = True
             self.end_game()
 
+    #Moves the timing icon across the screen
     def timing_icon_animate(self, timingIcon):
-        #anim = Animation(pos = (posX, (self.barOneStartY - self.barOneSizeY)), size = (2,self.barOneSizeY - (self.barOneSizeY / 5)), duration = 0.1)
         anim = Animation(pos = (self.barOneStartX + self.barOneSizeX, self.barOneStartY + 50), duration = self.barGenerator.time)
         anim.start(timingIcon)
 
@@ -770,40 +758,34 @@ class MusicGame(Widget):
         print("loading song")
         songsDIR = str(self.manager.musicDIR)
         songSource = (songsDIR, '/', str(self.songName))
-        #self.sound = SoundLoader.load('song.mp3')
-        #self.sound.play()
         MediaPlayer = autoclass('android.media.MediaPlayer')
         AudioManager = autoclass('android.media.AudioManager')
         self.mPlayer = MediaPlayer()
         self.mPlayer.setDataSource(songsDIR + '/' + self.songName)
         self.mPlayer.setAudioStreamType(AudioManager.STREAM_NOTIFICATION)
         self.mPlayer.prepare()
-        #self.mPlayer.start()
 
     def load_song_desktop(self):
         songDIR = (self.manager.musicDIR + '/' + str(self.songName))
         self.desktopAudio = SoundLoader.load(songDIR)
         
-
     def play_audio_android(self):
         self.mPlayer.start()   
 
     def play_audio_desktop(self):
         self.desktopAudio.play()
                 
-    #Split into draw class
+    #Draws the background with staff 
     def draw_background(self):
         self.canvas.clear()
         self.remove_widget(self.failLabel)
         self.remove_widget(self.epicLabel)
-        #Window.clearcolor = (0, 0.5, 0.5, 1)
-        #backgroundImage = Image(source="Background.jpg")
-        #backgroundImage.allow_stretch = False
-        #backgroundImage.keep_ration = True
+
         self.draw_notes()
         with self.canvas:
-            timingIconTest = Rectangle(pos=(self.barOneStartX, self.barOneStartY + 50), size=(2, 20))
-            self.timing_icon_animate(timingIconTest)
+            if(self.manager.difficulty != "Hard"):
+                timingIconTest = Rectangle(pos=(self.barOneStartX, self.barOneStartY + 50), size=(2, 20))
+                self.timing_icon_animate(timingIconTest)
             self.distanceBetweenStaffLines = self.barOneSizeY / 5
 
             for i in range(1,6):  
@@ -827,11 +809,13 @@ class MusicGame(Widget):
         
         self.assign_labels()    
     
+    #Updates the labels with the required values
     def draw_labels(self):
         self.score.text= ("Score: " + str(self.player1.curScore))
         self.multiplier.text= (str(self.player1.currentScoreMultipler) + "x")
         self.conCurNotes.text= ("Streak: " + str(self.player1.concurrentNotes))
 
+    #Assgns the positions and sizing of the gamescreen labels
     def assign_labels(self):
             with self.canvas:
                 self.score = Label(text= ("Score: " + str(self.player1.curScore)), font_size=50)
@@ -850,20 +834,17 @@ class MusicGame(Widget):
        
                 self.performanceMeter.pos = (20,20)  
         
-    #Split into draw class            
 
     notesAdded = []
 
+    #Draws the notes to the screen
     def draw_notes(self):
         distBetween = self.barOneSizeY / 5
         tripletDetected = 0
         self.clear_notes()
         #Current Bar
         for i in range(len(self.barGenerator.curBarPositions)):
-            #This offset for loaded in bars
-            #self.performanceMeter.center_x = self.performanceStartX + ((float(self.player1.curSuccess) / 100) * self.performanceSizeX)
             offset = (self.barGenerator.curBarPositions[i] / self.barGenerator.time)
-            #offset = (self.barGenerator.curBarPositions[i] * 100)
             draw = ((self.barOneSizeX) * offset) + self.barOneStartX
             if(len(self.barGenerator.curBarNoteTypes) > 0):
                 
@@ -875,8 +856,6 @@ class MusicGame(Widget):
                         self.add_widget(tripletLabel)
                     if(tripletDetected == 3):
                         tripletDetected = 0
-
-
 
                 if(self.barGenerator.curBarNoteTypes[i] == NoteType.fullNoteRest):
                     fullRest = Image(source = "Assets/Rest semibreve.png", keep_ratio = False, allow_stretch = True)
@@ -943,17 +922,12 @@ class MusicGame(Widget):
                     Ellipse(pos=(draw - distBetween, self.barOneStartY - self.barOneSizeY), size=(distBetween, distBetween))
             else:
                 pass
-                        #Rectangle(pos=(draw, self.barOneStartY- self.barOneSizeY), size=(2, self.barOneSizeY - distBetween))
-                        #Ellipse(pos=(draw - distBetween, self.barOneStartY - self.barOneSizeY), size=(distBetween, distBetween))
 
         #Next Bar
         tripletDetected = 0
         for i in range(len(self.barGenerator.nextBarPositions)):
-            #This offset for loaded in bars
             
-            #self.performanceMeter.center_x = self.performanceStartX + ((float(self.player1.curSuccess) / 100) * self.performanceSizeX)
             offset = (self.barGenerator.nextBarPositions[i] / self.barGenerator.time)
-            #offset = (self.barGenerator.curBarPositions[i] * 100)
             draw = ((self.barTwoSizeX) * offset) + self.barTwoStartX
             if(len(self.barGenerator.nextBarNoteTypes) > 0):
                 if(self.barGenerator.nextBarNoteTypes[i] == NoteType.fullNoteTriplet or self.barGenerator.nextBarNoteTypes[i] == NoteType.halfNoteTriplet or self.barGenerator.nextBarNoteTypes[i] == NoteType.quarterNoteTriplet or self.barGenerator.nextBarNoteTypes[i] == NoteType.eigthNoteTriplet or self.barGenerator.nextBarNoteTypes[i] == NoteType.sixteethNoteTriplet):
@@ -1022,6 +996,7 @@ class MusicGame(Widget):
             else:
                 pass
 
+    #Clears out the stored note images
     def clear_notes(self):
         for note in self.notesAdded:
             self.remove_widget(note)
@@ -1100,16 +1075,12 @@ class MusicGame(Widget):
                 self.add_widget(preScore)
 
                 
-#        restartButton = kb.Button(text="Restart")
-#        restartButton.bind(on_press=self.start_game)
-#        self.add_widget(restartButton)
-
+#Mode for players who want to enter their own beat timings in seconds in the beat files
 class SongMode(MusicGame):
     def bar_setup_type(self):
         self.barGenerator.curBarPositions, self.barGenerator.curBarNoteTypes = self.barGenerator.calculate_bars_song(0)
         self.barGenerator.nextBarPositions, self.barGenerator.nextBarNoteTypes = self.barGenerator.calculate_bars_song(self.barGenerator.time)
 
-        #Return how many bars the song contains
         self.gameManager.maxBars = self.barGenerator.calculate_song_length(self.songLength)
         self.gameManager.totalNotes += self.barGenerator.return_notes_in_bar()
         self.draw_notes()
@@ -1131,13 +1102,13 @@ class SongMode(MusicGame):
         self.songLength = float(contents[1])
         self.songStart = float(contents[2])
 
+#Sets up gamemode for random bar play. 
 class RandomMode(MusicGame):
 
     def bar_setup_type(self):
         self.barGenerator.curBarPositions, self.barGenerator.curBarNoteTypes = self.barGenerator.calculate_bars_random(0)
         self.barGenerator.nextBarPositions, self.barGenerator.nextBarNoteTypes = self.barGenerator.calculate_bars_random(self.barGenerator.time)
 
-        #Return how many bars the song contains
         self.gameManager.maxBars = self.barGenerator.calculate_song_length(self.songLength)
         self.gameManager.totalNotes += self.barGenerator.return_notes_in_bar()
         self.draw_notes()
@@ -1165,14 +1136,6 @@ menu = Builder.load_file("Menu.kv")
 
 class MusicApp(App):
     def build(self):
-#        game = MusicGame()
-#        game.draw_background()
-#        game.load_beats()
-#        game.calculate_bars()
-#        game.draw_notes()
-#        Clock.schedule_interval(game.update, 0.001)
-#        game.start_song()
-#        return game
         return menu
 
 
