@@ -708,9 +708,9 @@ class MusicGame(Widget):
 
     def note_hit_animation(self, noteID, isRest):
         if(isRest):
-            anim = Animation(pos = (self.notesAdded[noteID].pos[0] - 12, self.notesAdded[noteID].pos[1] - 12), size = (74, self.notesAdded[noteID].height + 24), color = (1,0.2,0.2,1), duration =0.03)
+            anim = Animation(color = (1,0.2,0.2,1), duration =0.03)
         else:
-            anim = Animation(pos = (self.notesAdded[noteID].pos[0] - 12, self.notesAdded[noteID].pos[1] - 12), size = (74, self.notesAdded[noteID].height + 24), color = (1,0.82,0.26,1), duration =0.03)
+            anim = Animation(pos = (self.notesAdded[noteID].pos[0] - 12, self.notesAdded[noteID].pos[1] - 12), size = (74, self.notesAdded[noteID].height + 24), color = (0,0.6,0.8,1), duration =0.03)
         anim.start(self.notesAdded[noteID])
          
     #Kivy function called by clock      
